@@ -229,12 +229,12 @@ def renderer(state, env):
 
 
 dir_path = path.dirname(__file__)
-json_path = path.abspath(path.join(dir_path, "halite.json"))
+json_path = path.abspath(path.join(dir_path, "halite_fleets.json"))
 with open(json_path) as json_file:
     specification = json.load(json_file)
 
 
 def html_renderer():
-    js_path = path.abspath(path.join(dir_path, "halite.js"))
+    js_path = path.abspath(path.join(dir_path, "halite_fleets.js"))
     with open(js_path) as js_file:
         return js_file.read()

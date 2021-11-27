@@ -1,6 +1,6 @@
 {
-  "name": "halite",
-  "title": "Halite 4",
+  "name": "halite_fleets",
+  "title": "Halite Fleets 5",
   "description": "The game of space salt.",
   "version": "1.2.1",
   "agents": [1, 2, 4],
@@ -24,9 +24,9 @@
       "minimum": 0
     },
     "convertCost": {
-      "description": "The amount of halite to convert a ship into a shipyard.",
+      "description": "The number of ships required to create a shipyard.",
       "type": "integer",
-      "default": 500,
+      "default": 200,
       "minimum": 0
     },
     "moveCost": {
@@ -100,11 +100,29 @@
             "additionalProperties": {
               "description": "Key: uid of the asset (shipyard). Value: position (row * size + column)",
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "items": [
+                {
+                  "description": "Position: (row * size + column).",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "description": "Ship Count: The number of ships in the shipyard.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "description": "Turns Controlled: The number of turns this team has owned this shipyard.",
+                  "type": "integer",
+                  "default": 0,
+                  "minimum": 0
+                }
+              ]
             }
           },
           {
-            "description": "Ships: The list of player owned ships.",
+            "description": "Fleets: The list of player owned fleets.",
             "type": "object",
             "additionalProperties": {
               "description": "Key: uid of the asset (ship).",
@@ -119,6 +137,16 @@
                   "description": "Ship Halite: The amount present in a ship.",
                   "type": "integer",
                   "default": 0,
+                  "minimum": 0
+                },
+                {
+                  "description": "Ship Count: The number of ships in the fleet.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "description": "Direction: The direction the fleet is going in",
+                  "type": "integer",
                   "minimum": 0
                 }
               ]
@@ -135,7 +163,7 @@
     "remainingOverageTime": 60
   },
   "action": {
-    "description": "Actions taken per asset (ship or shipyard).",
+    "description": "Actions taken per asset (fleet or shipyard).",
     "type": "object",
     "additionalProperties": {
       "description": "Key: uid of the asset. Value: action. SPAWN for shipyards, remaining for ships.",
