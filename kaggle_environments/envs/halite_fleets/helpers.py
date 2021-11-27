@@ -128,8 +128,21 @@ class Direction(Enum):
             0 if self == Direction.NORTH else
             1 if self == Direction.EAST else
             2 if self == Direction.SOUTH else
-            3
+            3 if self == Direciton.WEST else
+            None
         )
+
+    @staticmethod
+    def from_index(idx: int) -> Direction:
+        return (
+            Direction.NORTH if idx == 0 else
+            Direction.EAST if idx == 1 else
+            Direction.SOUTH if idx == 2 else
+            Direction.WEST if idx == 3 else
+            None
+        )
+
+
 
     @staticmethod
     def moves() -> List['Direction']:
@@ -166,6 +179,18 @@ class ShipyardAction:
             return f'{self._type.name} {self._num_ships}'
         if self._type == ShipyardActionType.LAUNCH:
             return f'{self._type.name} {self._num_ships} {self._direction}'
+
+    @staticmethod
+    def from_str(raw: str) -> Optional[ShipyardAction]:
+        if not raw:
+            return None
+        if raw.startswith(ShipyardActionType.SPAWN.name):
+            return ShipyardAction.spawn_ships(int(raw.split(" ")[1]))
+        if raw.startswith(ShipyardActionType.LAUNCH):
+            _, ship_str, dir_str = raw.split(" ")
+            num_ships = int(ship_str)
+            direction = Direction.from_index(int(dir_str))
+            return ShipyardAction.launch_ships_in_direction(num_ships, direction)
 
     @staticmethod
     def launch_ships_in_direction(number_ships: int, direction: Direction):
@@ -316,7 +341,7 @@ class Fleet:
     @property
     def _observation(self) -> List[int]:
         """Converts a fleet back to the normalized observation subset that constructed it."""
-        return [self.position.to_index(self._board.configuration.size), self.halite]
+        return [self.position.to_index(self._board.configuration.size), self.halite, self.ship_count, self.direction.to_index()]
 
     def less_than_other_allied_fleet(self, other: Fleet):
         if not self.ship_count == other.ship_count:
@@ -381,9 +406,9 @@ class Shipyard:
         self._next_action = value
 
     @property
-    def _observation(self) -> int:
+    def _observation(self) -> List[int]:
         """Converts a shipyard back to the normalized observation subset that constructed it."""
-        return self.position.to_index(self._board.configuration.size)
+        return [self.position.to_index(self._board.configuration.size), self.ship_count, self._turns_controlled]
 
 
 class Player:
@@ -503,27 +528,24 @@ class Board:
             self.players[player_id] = Player(player_id, player_halite, [], [], self)
             player_actions = next_actions[player_id] or {}
 
-            for (fleet_id, [fleet_index, fleet_halite]) in player_fleets.items():
+            for (fleet_id, [fleet_index, fleet_halite, ship_count, direction]) in player_fleets.items():
                 # In the raw observation, halite is stored as a 1d list but we convert it to a 2d dict for convenience
                 # Accordingly we also need to convert our list indices to dict keys / 2d positions
                 fleet_position = Point.from_index(fleet_index, size)
+                fleet_direction = Direction.from_index(direction)
                 raw_action = player_actions.get(fleet_id)
                 action = (
                     FleetAction[raw_action]
                     if raw_action in FleetAction.__members__
                     else None
                 )
-                self._add_fleet(Fleet(fleet_id, fleet_position, fleet_halite, player_id, self, action))
+                self._add_fleet(Fleet(fleet_id, ship_count, fleet_direction, fleet_position, fleet_halite, player_id, self, action))
 
-            for (shipyard_id, shipyard_index) in player_shipyards.items():
+            for (shipyard_id, [shipyard_index, ship_count, turns_controlled]) in player_shipyards.items():
                 shipyard_position = Point.from_index(shipyard_index, size)
                 raw_action = player_actions.get(shipyard_id)
-                action = (
-                    ShipyardActionType[raw_action]
-                    if raw_action in ShipyardActionType.__members__
-                    else None
-                )
-                self._add_shipyard(Shipyard(shipyard_id, shipyard_position, player_id, self, action))
+                action = ShipyardAction.from_str(raw_action)
+                self._add_shipyard(Shipyard(shipyard_id, ship_count, shipyard_position, player_id, turns_controlled, self, action))
 
     @property
     def configuration(self) -> Configuration:
