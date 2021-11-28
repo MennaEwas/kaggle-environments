@@ -18,7 +18,7 @@ import math
 import numpy as np
 from os import path
 from random import choice, randint, randrange, sample, seed
-from .helpers import board_agent, Board, FleetAction, ShipyardAction
+from .helpers import board_agent, Board, FleetAction, ShipyardAction, Direction
 from kaggle_environments import utils
 
 

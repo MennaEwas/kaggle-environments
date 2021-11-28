@@ -117,7 +117,8 @@ class Direction(Enum):
             Point(0, 1) if self == Direction.NORTH else
             Point(1, 0) if self == Direction.EAST else
             Point(0, -1) if self == Direction.SOUTH else
-            Point(-1, 0)
+            Point(-1, 0) if self == Direction.WEST else
+            None
         )
 
     def __str__(self) -> str:
@@ -128,12 +129,12 @@ class Direction(Enum):
             0 if self == Direction.NORTH else
             1 if self == Direction.EAST else
             2 if self == Direction.SOUTH else
-            3 if self == Direciton.WEST else
+            3 if self == Direction.WEST else
             None
         )
 
     @staticmethod
-    def from_index(idx: int) -> Direction:
+    def from_index(idx :int):
         return (
             Direction.NORTH if idx == 0 else
             Direction.EAST if idx == 1 else
@@ -181,7 +182,7 @@ class ShipyardAction:
             return f'{self._type.name} {self._num_ships} {self._direction}'
 
     @staticmethod
-    def from_str(raw: str) -> Optional[ShipyardAction]:
+    def from_str(raw: str):
         if not raw:
             return None
         if raw.startswith(ShipyardActionType.SPAWN.name):
@@ -343,7 +344,7 @@ class Fleet:
         """Converts a fleet back to the normalized observation subset that constructed it."""
         return [self.position.to_index(self._board.configuration.size), self.halite, self.ship_count, self.direction.to_index()]
 
-    def less_than_other_allied_fleet(self, other: Fleet):
+    def less_than_other_allied_fleet(self, other):
         if not self.ship_count == other.ship_count:
             return self.ship_count < other.ship_count
         if not self.halite == other.halite:

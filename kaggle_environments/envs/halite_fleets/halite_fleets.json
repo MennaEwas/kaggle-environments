@@ -1,8 +1,8 @@
 {
   "name": "halite_fleets",
-  "title": "Halite Fleets 5",
+  "title": "Halite 5: Fleets",
   "description": "The game of space salt.",
-  "version": "1.2.1",
+  "version": "1.0.0",
   "agents": [1, 2, 4],
   "configuration": {
     "episodeSteps": 400,
