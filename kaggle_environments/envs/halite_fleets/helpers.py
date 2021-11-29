@@ -699,13 +699,15 @@ class Board:
         # Process actions and store the results in the fleets and shipyards lists for collision checking
         for player in board.players.values():
             for shipyard in player.shipyards:
-                if (shipyard.next_action.type == ShipyardActionType.SPAWN 
+                if shipyard.next_action == None:
+                    pass
+                elif (shipyard.next_action.type == ShipyardActionType.SPAWN 
                         and player.halite >= spawn_cost * shipyard.next_action.num_ships 
                         and shipyard.next_action.num_ships <= shipyard.max_spawn):
                     # Handle SPAWN actions
                     player._halite -= spawn_cost * shipyard.next_action.num_ships
                     shipyard._ship_count += shipyard.next_action.num_ships
-                if shipyard.next_action.type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
+                elif shipyard.next_action.type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
                     shipyard._ship_count -= shipyard.next_action.num_ships
                     board._add_fleet(Fleet(FleetId(create_uid), shipyard.next_action.num_ships, shipyard.next_action.direction, shipyard.position, 0, player.id, board))
                 
