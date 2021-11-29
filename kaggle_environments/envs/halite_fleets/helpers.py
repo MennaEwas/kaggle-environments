@@ -134,7 +134,17 @@ class Direction(Enum):
         )
 
     @staticmethod
-    def from_index(idx :int):
+    def from_str(str_dir: str):
+        return  (
+            Direction.NORTH if str_dir == "NORTH" else
+            Direction.EAST if str_dir == "EAST" else
+            Direction.SOUTH if str_dir == "SOUTH" else
+            Direction.WEST if str_dir == "WEST" else
+            None
+        )
+
+    @staticmethod
+    def from_index(idx: int):
         return (
             Direction.NORTH if idx == 0 else
             Direction.EAST if idx == 1 else
@@ -175,22 +185,26 @@ class ShipyardAction:
         self._num_ships = num_ships
         self._direction = direction
 
-    def __str(self) -> str:
+    def __str__(self) -> str:
         if self._type == ShipyardActionType.SPAWN:
-            return f'{self._type.name} {self._num_ships}'
+            return f'{self._type.name}_{self._num_ships}'
         if self._type == ShipyardActionType.LAUNCH:
-            return f'{self._type.name} {self._num_ships} {self._direction}'
+            return f'{self._type.name}_{self._num_ships}_{self._direction}'
+    
+    @property
+    def name(self):
+        return str(self)
 
     @staticmethod
     def from_str(raw: str):
         if not raw:
             return None
         if raw.startswith(ShipyardActionType.SPAWN.name):
-            return ShipyardAction.spawn_ships(int(raw.split(" ")[1]))
-        if raw.startswith(ShipyardActionType.LAUNCH):
-            _, ship_str, dir_str = raw.split(" ")
+            return ShipyardAction.spawn_ships(int(raw.split("_")[1]))
+        if raw.startswith(ShipyardActionType.LAUNCH.name):
+            _, ship_str, dir_str = raw.split("_")
             num_ships = int(ship_str)
-            direction = Direction.from_index(int(dir_str))
+            direction = Direction.from_str(dir_str)
             return ShipyardAction.launch_ships_in_direction(num_ships, direction)
 
     @staticmethod
@@ -202,7 +216,7 @@ class ShipyardAction:
         return ShipyardAction(ShipyardActionType.SPAWN, number_ships, None)
 
     @property
-    def type(self) -> ShipyardActionType:
+    def action_type(self) -> ShipyardActionType:
         return self._type
     
     @property
@@ -701,13 +715,13 @@ class Board:
             for shipyard in player.shipyards:
                 if shipyard.next_action == None:
                     pass
-                elif (shipyard.next_action.type == ShipyardActionType.SPAWN 
+                elif (shipyard.next_action.action_type == ShipyardActionType.SPAWN 
                         and player.halite >= spawn_cost * shipyard.next_action.num_ships 
                         and shipyard.next_action.num_ships <= shipyard.max_spawn):
                     # Handle SPAWN actions
                     player._halite -= spawn_cost * shipyard.next_action.num_ships
                     shipyard._ship_count += shipyard.next_action.num_ships
-                elif shipyard.next_action.type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
+                elif shipyard.next_action.action_type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
                     shipyard._ship_count -= shipyard.next_action.num_ships
                     board._add_fleet(Fleet(FleetId(create_uid), shipyard.next_action.num_ships, shipyard.next_action.direction, shipyard.position, 0, player.id, board))
                 

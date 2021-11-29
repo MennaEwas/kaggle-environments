@@ -46,14 +46,14 @@ def random_agent(board):
     # randomize shipyard order
     shipyards = sample(shipyards, len(shipyards))
     for shipyard in shipyards:
-        # If there are no ships, always spawn if possible
-        if shipyard.ship_count < 10 and remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
+        # 20% chance to launch a fleet
+        if randint(0, 4) == 0 and shipyard.ship_count > 10:
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(10, Direction.from_index(randint(0, 4)))
+        # else spawn if possible
+        elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
             remaining_halite -= board.configuration.spawn_cost
             shipyard.next_action = ShipyardAction.spawn_ships(shipyard.max_spawn)
-        # 20% chance to launch a fleet
-        elif randint(0, 4) == 0 and shipyard.ship_count > 10:
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(10, Direction.from_index(randint(0, 4)))
-
+        
 agents = {"random": random_agent}
 
 

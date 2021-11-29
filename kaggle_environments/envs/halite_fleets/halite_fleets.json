@@ -166,8 +166,7 @@
     "description": "Actions taken per asset (fleet or shipyard).",
     "type": "object",
     "additionalProperties": {
-      "description": "Key: uid of the asset. Value: action. SPAWN for shipyards, remaining for ships.",
-      "enum": ["CONVERT", "SPAWN", "NORTH", "SOUTH", "EAST", "WEST"]
+      "description": "Key: uid of the asset. Value: action. SPAWN for shipyards, remaining for ships."
     }
   }
 }
