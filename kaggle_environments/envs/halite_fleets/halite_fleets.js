@@ -454,11 +454,11 @@ async function renderer({
 
   // Draw Ships and a smaller Halite icon according to their current cargo.
   players.forEach((player, playerIndex) => {
-    Object.entries(player[2]).forEach(([uid, [pos, cargo]]) => {
+    Object.entries(player[2]).forEach(([uid, [pos, cargo, shipCount, directionIdx]]) => {
       const shipx = 500 + 100 * playerIndex;
       const flamex = 200 + 100 * Math.min(2, Math.floor(3 * frame));
       const { dx, dy, ds } = getCoords(pos);
-      const sy = getShipDir(playerIndex, uid) * 100;
+      const sy = directionIdx * 100;
       const ss = fixedCellSize;
       fgCtx.drawImage(bufferCanvas, shipx, sy, ss, ss, dx, dy, ds, ds);
       fgCtx.drawImage(bufferCanvas, flamex, sy, ss, ss, dx, dy, ds, ds);
@@ -481,24 +481,17 @@ async function renderer({
     environment.steps[step - 1][0].observation.players.forEach(
       (player, playerIndex) => {
         const status = state[playerIndex].status;
-        const [, shipyards, ships] = player;
+        const [, shipyards, fleets] = player;
         const action = environment.steps[step][playerIndex].action || {};
         // Stationary ships collecting Halite.
-        Object.entries(ships).forEach(([uid, [pos]]) => {
+        Object.entries(fleets).forEach(([uid, [pos]]) => {
           if (uid in action) return;
           if (board[pos].ship !== uid) board[pos].collision = true;
         });
         // Convert to shipyard, Spawn ship, or Move ship.
         Object.entries(action).forEach(([uid, value]) => {
-          if (value === "SPAWN") {
-            if (
-              !board[shipyards[uid]].ship ||
-              parseInt(board[shipyards[uid]].ship.split("-")[0]) !== step
-            ) {
-              board[shipyards[uid]].collision = true;
-            }
-          } else if (value !== "CONVERT") {
-            const toPos = getMovePos(ships[uid][0], value);
+          if (value !== "CONVERT") {
+            const toPos = getMovePos(fleets[uid][0], value);
             if (board[toPos].ship !== uid) board[toPos].collision = true;
           }
         });

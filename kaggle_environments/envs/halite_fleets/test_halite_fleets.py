@@ -49,6 +49,18 @@ def test_halite_helpers():
     assert json["statuses"] == ["DONE", "DONE"]
 
 
+def test_start_with_one_shipyard_and_no_fleets():
+    env = make("halite_fleets", configuration={
+        "size": 3,
+        "startingHalite": 100,
+        "randomSeed": 0 
+    })
+    obs = env.reset(2)[0].observation
+    players = obs.get('players')
+    assert len(players) == 2
+    assert len(players[0][1].items()) == 1
+    assert len(players[0][2].items()) == 0
+
 def create_board(size=3, starting_halite=100, agent_count=2, random_seed=0):
     env = make("halite_fleets", configuration={
         "size": size,
@@ -56,4 +68,64 @@ def create_board(size=3, starting_halite=100, agent_count=2, random_seed=0):
         "randomSeed": random_seed
     })
     return Board(env.reset(agent_count)[0].observation, env.configuration)
+
+def test_shipyards_make_ships():
+    board = create_board()
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.spawn_ships(1)
+
+    board = board.next()
+
+    for shipyard in board.shipyards.values():
+        assert shipyard.ship_count == 1, "Should have spawned a ship"
+
+def test_shipyards_launch_fleets():
+    board = create_board()
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.spawn_ships(1)
+
+    board = board.next()
+
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.launch_ships_in_direction(1, Direction.NORTH)
+
+    board = board.next()
+
+    assert len(board.current_player.fleets) == 1, "should have one fleet"
+
+def test_fleets_move_in_direction():
+    board = create_board(size = 10)
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.spawn_ships(1)
+
+    print("board.next()")
+    board = board.next()
+
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.launch_ships_in_direction(1, Direction.NORTH)
+
+    for fleet in board.fleets.values():
+        print(fleet.id, fleet.direction, fleet.position)
+
+    board = board.next()
+
+    for fleet in board.fleets.values():
+        print(fleet.id, fleet.direction, fleet.position)
+
+    positions = {
+        fleet.id: fleet.position
+        for fleet in board.fleets.values()
+    }
+
+    board = board.next()
+
+    new_positions = {
+        fleet.id: fleet.position
+        for fleet in board.fleets.values()
+    }
+
+    assert len(positions) == 2 and len(positions) == len(new_positions), "there should be two fleets"
+
+    for key in positions.keys():
+        assert positions.get(key) + Direction.NORTH.to_point() == new_positions.get(key)
 

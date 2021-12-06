@@ -198,13 +198,14 @@ def renderer(state, env):
 
     board = [[h, -1, -1, -1] for h in obs.halite]
     for index, player in enumerate(obs.players):
-        _, shipyards, ships = player
-        for shipyard_pos in shipyards.values():
+        _, shipyards, fleets = player
+        for shipyard in shipyards.values():
+            shipyard_pos, _, _ = shipyard
             board[shipyard_pos][1] = index
-        for ship in ships.values():
-            ship_pos, ship_halite = ship
-            board[ship_pos][2] = index
-            board[ship_pos][3] = ship_halite
+        for fleet in fleets.values():
+            fleet_pos, fleet_halite, ship_count, _ = fleet
+            board[fleet_pos][2] = index
+            board[fleet_pos][3] = ship_count
 
     col_divider = "|"
     row_divider = "+" + "+".join(["----"] * size) + "+\n"
@@ -212,9 +213,9 @@ def renderer(state, env):
     out = row_divider
     for row in range(size):
         for col in range(size):
-            _, _, ship, ship_halite = board[col + row * size]
+            _, _, fleet, fleet_halite = board[col + row * size]
             out += col_divider + (
-                f"{min(int(ship_halite), 99)}S{ship}" if ship > -1 else ""
+                f"{min(int(fleet_halite), 99)}S{fleet}" if fleet > -1 else ""
             ).ljust(4)
         out += col_divider + "\n"
         for col in range(size):

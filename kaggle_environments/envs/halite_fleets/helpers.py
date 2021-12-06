@@ -447,7 +447,7 @@ class Player:
         return self._shipyard_ids
 
     @property
-    def fleed_ids(self) -> List[FleetId]:
+    def fleet_ids(self) -> List[FleetId]:
         return self._fleet_ids
 
     @property
@@ -463,7 +463,7 @@ class Player:
         """Returns all fleets owned by this player."""
         return [
             self._board.fleets[fleet_id]
-            for fleet_id in self.fleed_ids
+            for fleet_id in self.fleet_ids
         ]
 
     @property
@@ -723,7 +723,7 @@ class Board:
                     shipyard._ship_count += shipyard.next_action.num_ships
                 elif shipyard.next_action.action_type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
                     shipyard._ship_count -= shipyard.next_action.num_ships
-                    board._add_fleet(Fleet(FleetId(create_uid), shipyard.next_action.num_ships, shipyard.next_action.direction, shipyard.position, 0, player.id, board))
+                    board._add_fleet(Fleet(FleetId(create_uid()), shipyard.next_action.num_ships, shipyard.next_action.direction, shipyard.position, 0, player.id, board))
                 
                 # Clear the shipyard's action so it doesn't repeat the same action automatically
                 shipyard.next_action = None
@@ -737,7 +737,7 @@ class Board:
                     board._delete_fleet(fleet)
                 else:
                     # see if any allied fleets are 'passing eachother in the night'
-                    dest_idx = fleet.position.translate(fleet.direction.to_point()).to_index(configuration.size)
+                    dest_idx = fleet.position.translate(fleet.direction.to_point(), configuration.size).to_index(configuration.size)
                     source_idx = fleet.position.to_index(configuration.size)
                     move_key = (dest_idx, source_idx) if dest_idx < source_idx else (source_idx, dest_idx)
                     player_fleet_moves[move_key].append(fleet.id)
@@ -794,7 +794,7 @@ class Board:
         fleet_collision_groups = group_by(board.fleets.values(), lambda fleet: fleet.position)
         for position, collided_fleets in fleet_collision_groups.items():
             winner, deleted = resolve_collision(collided_fleets)
-            shipyard = group_by(board.shipyards, lambda shipyard: shipyard.position).get(position)
+            shipyard = group_by(board.shipyards.values(), lambda shipyard: shipyard.position).get(position)
             if winner is not None:
                 winner.cell._fleet_id = winner.id
                 max_enemy_size = max([fleet.ship_count for fleet in deleted]) if deleted else 0
