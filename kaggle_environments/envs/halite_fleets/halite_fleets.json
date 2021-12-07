@@ -20,7 +20,7 @@
     "spawnCost": {
       "description": "The amount of halite to spawn a new ship.",
       "type": "integer",
-      "default": 500,
+      "default": 1,
       "minimum": 0
     },
     "convertCost": {
@@ -36,7 +36,7 @@
       "minimum": 0
     },
     "collectRate": {
-      "description": "The rate of halite collected by a ship from a cell by not moving.",
+      "description": "The rate of halite collected by a fleet from a cell each cell.",
       "type": "number",
       "default": 0.25,
       "minimum": 0

@@ -93,6 +93,21 @@ def test_shipyards_launch_fleets():
 
     assert len(board.current_player.fleets) == 1, "should have one fleet"
 
+def test_fleets_launched_with_direction():
+    board = create_board()
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.spawn_ships(1)
+
+    board = board.next()
+
+    for shipyard in board.shipyards.values():
+        shipyard.next_action = ShipyardAction.launch_ships_in_direction(1, Direction.NORTH)
+
+    board = board.next()
+
+    assert len(board.current_player.fleets) == 1, "should have one fleet"
+    assert board.current_player.fleets[0].direction == Direction.NORTH, "should go NORTH"
+
 def test_fleets_move_in_direction():
     board = create_board(size = 10)
     for shipyard in board.shipyards.values():

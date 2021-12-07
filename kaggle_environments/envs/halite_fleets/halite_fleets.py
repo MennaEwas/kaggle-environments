@@ -48,7 +48,7 @@ def random_agent(board):
     for shipyard in shipyards:
         # 20% chance to launch a fleet
         if randint(0, 4) == 0 and shipyard.ship_count > 10:
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(10, Direction.from_index(randint(0, 4)))
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(shipyard.ship_count, Direction.random_direction())
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
             remaining_halite -= board.configuration.spawn_cost

@@ -19,6 +19,7 @@ from kaggle_environments.helpers import Point, group_by
 from typing import *
 import sys
 import math
+import random
 import kaggle_environments.helpers
 
 
@@ -153,7 +154,17 @@ class Direction(Enum):
             None
         )
 
-
+    @staticmethod
+    def random_direction() -> 'Direction':
+        rand = random.random()
+        if rand <= .25:
+            return Direction.NORTH
+        elif rand <= .5:
+            return Direction.EAST
+        elif rand <= .75:
+            return Direction.SOUTH
+        else:
+            return Direction.WEST
 
     @staticmethod
     def moves() -> List['Direction']:
@@ -182,6 +193,8 @@ class ShipyardAction:
 
     def __init__(self, type: ShipyardActionType, num_ships: Optional[int], direction: Optional[Direction]) -> None:
         self._type = type
+        assert num_ships > 0, "must be a positive number"
+        assert num_ships == int(num_ships), "must be an integer"
         self._num_ships = num_ships
         self._direction = direction
 
@@ -209,10 +222,15 @@ class ShipyardAction:
 
     @staticmethod
     def launch_ships_in_direction(number_ships: int, direction: Direction):
+        assert number_ships > 0, "must be a positive number_ships"
+        assert number_ships == int(number_ships), "must be an integer number_ships"
+        assert direction is not None, "direction cannot be None"
         return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, direction)
 
     @staticmethod
     def spawn_ships(number_ships: int):
+        assert number_ships > 0, "must be a positive number_ships"
+        assert number_ships == int(number_ships), "must be an integer number_ships"
         return ShipyardAction(ShipyardActionType.SPAWN, number_ships, None)
 
     @property
@@ -363,7 +381,7 @@ class Fleet:
             return self.ship_count < other.ship_count
         if not self.halite == other.halite:
             return self.halite < other.halite
-        return self.direction.to_index > other.direction.to_index
+        return self.direction.to_index() > other.direction.to_index()
 
 
 
@@ -690,6 +708,35 @@ class Board:
             shipyard.cell._shipyard_id = None
         del self._shipyards[shipyard.id]
 
+
+    def print(self: 'Board') -> None:
+        size = self.configuration.size
+        player_chars = {
+            pid: alpha
+            for pid, alpha in  zip(self.players, "abcdef"[:len(self.players)])
+        }
+        print(20 * "=")
+        for i in range(size):
+            row = ""
+            for j in range(size):
+                pos = Point(j, size - 1 - i)
+                curr_cell = self.cells[pos]
+                if curr_cell.shipyard is not None:
+                    row += player_chars[curr_cell.shipyard.player_id].upper()
+                elif curr_cell.fleet is not None:
+                    row += player_chars[curr_cell.fleet.player_id]
+                elif curr_cell.halite <= 50:
+                    row += " "
+                elif curr_cell.halite <= 250:
+                    row += "."
+                elif curr_cell.halite <= 400:
+                    row += "*"
+                elif curr_cell.halite > 400:
+                    row += "o"
+            print(row)
+        print(20 * "=")
+
+
     def next(self) -> 'Board':
         """
         Returns a new board with the current board's next actions applied.
@@ -753,12 +800,12 @@ class Board:
                 if f1.less_than_other_allied_fleet(f2):
                     f1, f2 = f2, f1
                     fid1, fid2 = fid2, fid1
-                f1._halte += f2.halite
+                f1._halite += f2.halite
                 f1._ship_count += f2._ship_count
                 board._delete_fleet(f2)
                 return fid1
 
-            # resolve any allied fleets are 'passing eachother in the night'
+            # resolve any fleets are 'passing eachother in the night'
             for value in player_fleet_moves.values():
                 if len(value) == 2:
                     combine_fleets(value[0], value[1])
@@ -766,9 +813,9 @@ class Board:
             # resolve any allied fleets that ended up in the same square
             fleets_by_loc = group_by(player.fleets, lambda fleet: fleet.position.to_index(configuration.size))
             for value in fleets_by_loc.values():
-                fid = value[0]
+                fid = value[0].id
                 for i in range (1, len(value)):
-                    fid = combine_fleets(fid, value[i])
+                    fid = combine_fleets(fid, value[i].id)
 
             # Lets just check and make sure.
             assert player.halite >= 0
@@ -817,9 +864,9 @@ class Board:
             fleet = shipyard.cell.fleet
             if fleet is not None and fleet.player_id != shipyard.player_id:
                 if fleet.ship_count > shipyard.ship_count:
-                    shipyard._player_id = fleet.player_id
-                    shipyard._turns_controlled = 0
-                    shipyard._ship_count = fleet.ship_count - shipyard.ship_count
+                    count = fleet.ship_count - shipyard.ship_count
+                    board._delete_shipyard(shipyard)
+                    board._add_shipyard(Shipyard(ShipyardId(create_uid()), count, shipyard.position, fleet.player.id, 1, board))
                     fleet.player._halite += fleet.halite
                     board._delete_fleet(fleet)
                 else:
@@ -847,13 +894,14 @@ class Board:
 
         # Regenerate halite in cells
         for cell in board.cells.values():
-            if cell.fleet_id is None:
+            if cell.fleet_id is None and cell.shipyard_id is None:
                 next_halite = round(cell.halite * (1 + configuration.regen_rate), 3)
                 cell._halite = min(next_halite, configuration.max_cell_halite)
                 # Lets just check and make sure.
-            assert cell.halite >= 0
 
         board._step += 1
+
+        self.print()
 
         return board
 
