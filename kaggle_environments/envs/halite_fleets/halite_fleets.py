@@ -18,7 +18,7 @@ import math
 import numpy as np
 from os import path
 from random import choice, randint, randrange, sample, seed
-from .helpers import board_agent, Board, FleetAction, ShipyardAction, Direction
+from .helpers import board_agent, Board, ShipyardAction, Direction
 from kaggle_environments import utils
 
 
@@ -48,7 +48,10 @@ def random_agent(board):
     for shipyard in shipyards:
         # 20% chance to launch a fleet
         if randint(0, 4) == 0 and shipyard.ship_count > 10:
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(shipyard.ship_count, Direction.random_direction())
+            dir_str = Direction.random_direction().to_char()
+            dir2_str = Direction.random_direction().to_char()
+            flight_plan = dir_str + str(randint(1, 10)) + dir2_str
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(shipyard.ship_count, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
             remaining_halite -= board.configuration.spawn_cost
@@ -117,6 +120,12 @@ def populate_board(state, env):
     corner_grid = np.clip(corner_grid, 0, a_max=None)
     radius_grid[half - (half // 4):, half - (half // 4):] += corner_grid
 
+    # make it assomptocially symmetric
+    for i in range(half):
+        for j in range(half):
+            if i + j < half:
+                radius_grid[i][j] = radius_grid[j][i]
+
     # Normalize the available halite against the defined configuration starting halite.
     total = sum([sum(row) for row in radius_grid])
     obs.halite = [0] * (size ** 2)
@@ -134,13 +143,13 @@ def populate_board(state, env):
     if num_agents == 1:
         starting_positions[0] = size * (size // 2) + size // 2
     elif num_agents == 2:
-        starting_positions[0] = size * (size // 2) + size // 4
-        starting_positions[1] = size * (size // 2) + math.ceil(3 * size / 4) - 1
+        starting_positions[0] = size * (size // 2 - 1) + size // 4
+        starting_positions[1] = size * (size // 2 + 1) + math.ceil(3 * size / 4) - 1
     elif num_agents == 4:
-        starting_positions[0] = size * (size // 4) + size // 4
-        starting_positions[1] = size * (size // 4) + 3 * size // 4
-        starting_positions[2] = size * (3 * size // 4) + size // 4
-        starting_positions[3] = size * (3 * size // 4) + 3 * size // 4
+        starting_positions[0] = size * (size // 4 + 1) + size // 4 - 1
+        starting_positions[1] = size * (size // 4 - 1) + 3 * size // 4 - 1
+        starting_positions[2] = size * (3 * size // 4 + 1) + size // 4 + 1
+        starting_positions[3] = size * (3 * size // 4 - 1) + 3 * size // 4 + 1
 
     # Initialize the players.
     obs.players = []
@@ -203,7 +212,7 @@ def renderer(state, env):
             shipyard_pos, _, _ = shipyard
             board[shipyard_pos][1] = index
         for fleet in fleets.values():
-            fleet_pos, fleet_halite, ship_count, _ = fleet
+            fleet_pos, fleet_halite, ship_count, _, _ = fleet
             board[fleet_pos][2] = index
             board[fleet_pos][3] = ship_count
 

@@ -134,6 +134,15 @@ class Direction(Enum):
             None
         )
 
+    def to_char(self) -> str:
+        return (
+            "N" if self == Direction.NORTH else
+            "E" if self == Direction.EAST else
+            "S" if self == Direction.SOUTH else
+            "W" if self == Direction.WEST else
+            None
+        )
+
     @staticmethod
     def from_str(str_dir: str):
         return  (
@@ -141,6 +150,16 @@ class Direction(Enum):
             Direction.EAST if str_dir == "EAST" else
             Direction.SOUTH if str_dir == "SOUTH" else
             Direction.WEST if str_dir == "WEST" else
+            None
+        )
+
+    @staticmethod
+    def from_char(str_char: str):
+        return  (
+            Direction.NORTH if str_char == "N" else
+            Direction.EAST if str_char == "E" else
+            Direction.SOUTH if str_char == "S" else
+            Direction.WEST if str_char == "W" else
             None
         )
 
@@ -175,13 +194,6 @@ class Direction(Enum):
             Direction.WEST,
         ]
 
-
-class FleetAction(Enum):
-    CONVERT = auto()
-
-    def __str__(self) -> str:
-        return self.name
-
 class ShipyardActionType(Enum):
     SPAWN = auto()
     LAUNCH = auto()
@@ -191,18 +203,18 @@ class ShipyardActionType(Enum):
 
 class ShipyardAction:
 
-    def __init__(self, type: ShipyardActionType, num_ships: Optional[int], direction: Optional[Direction]) -> None:
+    def __init__(self, type: ShipyardActionType, num_ships: Optional[int], flight_plan: Optional[str]) -> None:
         self._type = type
         assert num_ships > 0, "must be a positive number"
         assert num_ships == int(num_ships), "must be an integer"
         self._num_ships = num_ships
-        self._direction = direction
+        self._flight_plan = flight_plan
 
     def __str__(self) -> str:
         if self._type == ShipyardActionType.SPAWN:
             return f'{self._type.name}_{self._num_ships}'
         if self._type == ShipyardActionType.LAUNCH:
-            return f'{self._type.name}_{self._num_ships}_{self._direction}'
+            return f'{self._type.name}_{self._num_ships}_{self._flight_plan}'
     
     @property
     def name(self):
@@ -215,17 +227,16 @@ class ShipyardAction:
         if raw.startswith(ShipyardActionType.SPAWN.name):
             return ShipyardAction.spawn_ships(int(raw.split("_")[1]))
         if raw.startswith(ShipyardActionType.LAUNCH.name):
-            _, ship_str, dir_str = raw.split("_")
+            _, ship_str, plan_str = raw.split("_")
             num_ships = int(ship_str)
-            direction = Direction.from_str(dir_str)
-            return ShipyardAction.launch_ships_in_direction(num_ships, direction)
+            return ShipyardAction.launch_ships_in_direction(num_ships, plan_str)
 
     @staticmethod
-    def launch_ships_in_direction(number_ships: int, direction: Direction):
+    def launch_ships_in_direction(number_ships: int, flight_plan: str):
         assert number_ships > 0, "must be a positive number_ships"
         assert number_ships == int(number_ships), "must be an integer number_ships"
-        assert direction is not None, "direction cannot be None"
-        return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, direction)
+        assert flight_plan is not None and len(flight_plan) > 0, "flight_plan must be a str of len > 0"
+        return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, flight_plan)
 
     @staticmethod
     def spawn_ships(number_ships: int):
@@ -242,8 +253,8 @@ class ShipyardAction:
         return self._num_ships
 
     @property
-    def direction(self) -> Optional[Direction]:
-        return self._direction
+    def flight_plan(self) -> Optional[str]:
+        return self._flight_plan
 
 
 FleetId = NewType('FleetId', str)
@@ -312,15 +323,15 @@ class Cell:
 
 
 class Fleet:
-    def __init__(self, fleet_id: FleetId, ship_count: int, direction: Direction, position: Point, halite: int, player_id: PlayerId, board: 'Board', next_action: Optional[FleetAction] = None) -> None:
+    def __init__(self, fleet_id: FleetId, ship_count: int, direction: Direction, position: Point, halite: int, flight_plan: str, player_id: PlayerId, board: 'Board') -> None:
         self._id = fleet_id
         self._ship_count = ship_count
         self._direction = direction
         self._position = position
+        self._flight_plan = flight_plan
         self._halite = halite
         self._player_id = player_id
         self._board = board
-        self._next_action = next_action
 
     @property
     def id(self) -> FleetId:
@@ -357,24 +368,24 @@ class Fleet:
         return self._board.players[self.player_id]
 
     @property
-    def next_action(self) -> Optional[FleetAction]:
-        """Returns the action that will be executed by this fleet when Board.next() is called (when the current turn ends)."""
-        return self._next_action
+    def flight_plan(self) -> str:
+        """Returns the current flight plan of the fleet"""
+        return self._flight_plan
 
     @property
     def collection_rate(self) -> float:
-        """.25% per ship, plus 1% for every 10 ships, plus 5% for every 100 ships """
-        return .25 * self.ship_count + math.floor(self.ship_count / 10) + math.floor(self.ship_count / 100) * 5
+        """ln(ship_count) / 10"""
+        return math.log(self.ship_count) / 10
 
-    @next_action.setter
-    def next_action(self, value: Optional[FleetAction]) -> None:
-        """Sets the action that will be executed by this fleet when Board.next() is called (when the current turn ends)."""
-        self._next_action = value
+    @property
+    def max_flight_plan_len(self) -> int:
+        """Returns the length of the longest possible flight plan this fleet can be assigned"""
+        return math.floor(2 * math.log(self.ship_count)) + 1
 
     @property
     def _observation(self) -> List[int]:
         """Converts a fleet back to the normalized observation subset that constructed it."""
-        return [self.position.to_index(self._board.configuration.size), self.halite, self.ship_count, self.direction.to_index()]
+        return [self.position.to_index(self._board.configuration.size), self.halite, self.ship_count, self.direction.to_index(), self.flight_plan]
 
     def less_than_other_allied_fleet(self, other):
         if not self.ship_count == other.ship_count:
@@ -492,17 +503,12 @@ class Player:
     @property
     def next_actions(self) -> Dict[str, str]:
         """Returns all queued fleet and shipyard actions for this player formatted for the halite interpreter to receive as an agent response."""
-        fleet_actions = {
-            fleet.id: fleet.next_action.name
-            for fleet in self.fleets
-            if fleet.next_action is not None
-        }
         shipyard_actions = {
             shipyard.id: shipyard.next_action.name
             for shipyard in self.shipyards
             if shipyard.next_action is not None
         }
-        return {**fleet_actions, **shipyard_actions}
+        return {**shipyard_actions}
 
     @property
     def _observation(self):
@@ -528,7 +534,7 @@ class Board:
         References are deep and chainable e.g.
             [fleet.halite for player in board.players for fleet in player.fleets]
             fleet.player.shipyards[0].cell.north.east.fleet
-        Consumers should not set or modify any attributes except Fleet.next_action and Shipyard.next_action
+        Consumers should not set or modify any attributes except and Shipyard.next_action
         """
         observation = Observation(raw_observation)
         # next_actions is effectively a Dict[Union[[FleetId, FleetAction], [ShipyardId, ShipyardAction]]]
@@ -561,18 +567,12 @@ class Board:
             self.players[player_id] = Player(player_id, player_halite, [], [], self)
             player_actions = next_actions[player_id] or {}
 
-            for (fleet_id, [fleet_index, fleet_halite, ship_count, direction]) in player_fleets.items():
+            for (fleet_id, [fleet_index, fleet_halite, ship_count, direction, flight_plan]) in player_fleets.items():
                 # In the raw observation, halite is stored as a 1d list but we convert it to a 2d dict for convenience
                 # Accordingly we also need to convert our list indices to dict keys / 2d positions
                 fleet_position = Point.from_index(fleet_index, size)
                 fleet_direction = Direction.from_index(direction)
-                raw_action = player_actions.get(fleet_id)
-                action = (
-                    FleetAction[raw_action]
-                    if raw_action in FleetAction.__members__
-                    else None
-                )
-                self._add_fleet(Fleet(fleet_id, ship_count, fleet_direction, fleet_position, fleet_halite, player_id, self, action))
+                self._add_fleet(Fleet(fleet_id, ship_count, fleet_direction, fleet_position, fleet_halite, flight_plan, player_id, self))
 
             for (shipyard_id, [shipyard_index, ship_count, turns_controlled]) in player_shipyards.items():
                 shipyard_position = Point.from_index(shipyard_index, size)
@@ -715,7 +715,7 @@ class Board:
             pid: alpha
             for pid, alpha in  zip(self.players, "abcdef"[:len(self.players)])
         }
-        print(20 * "=")
+        print(self.configuration.size * "=")
         for i in range(size):
             row = ""
             for j in range(size):
@@ -734,7 +734,7 @@ class Board:
                 elif curr_cell.halite > 400:
                     row += "o"
             print(row)
-        print(20 * "=")
+        print(self.configuration.size * "=")
 
 
     def next(self) -> 'Board':
@@ -770,29 +770,50 @@ class Board:
                     shipyard._ship_count += shipyard.next_action.num_ships
                 elif shipyard.next_action.action_type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
                     shipyard._ship_count -= shipyard.next_action.num_ships
-                    board._add_fleet(Fleet(FleetId(create_uid()), shipyard.next_action.num_ships, shipyard.next_action.direction, shipyard.position, 0, player.id, board))
+                    direction = Direction.from_char(shipyard.next_action.flight_plan[0])
+                    board._add_fleet(Fleet(FleetId(create_uid()), shipyard.next_action.num_ships, direction, shipyard.position, 0, shipyard.next_action.flight_plan, player.id, board))
                 
                 # Clear the shipyard's action so it doesn't repeat the same action automatically
                 shipyard.next_action = None
                 shipyard._turns_controlled += 1
 
+            def find_first_non_digit(candiate_str):
+                for i in range(len(candiate_str)):
+                    if not candiate_str[i].isdigit():
+                        return i
+                return 0
+
             player_fleet_moves = DefaultDict(list)
             for fleet in player.fleets:
-                if fleet.next_action == FleetAction.CONVERT and fleet.ship_count >= convert_cost and fleet.cell.shipyard_id is None:
+                if fleet.flight_plan and fleet.flight_plan[0] == "C" and fleet.ship_count >= convert_cost and fleet.cell.shipyard_id is None:
                     player._halite += fleet.halite
                     board._add_shipyard(Shipyard(ShipyardId(create_uid()), fleet.ship_count - convert_cost, fleet.position, player.id, 0, board))
                     board._delete_fleet(fleet)
-                else:
-                    # see if any allied fleets are 'passing eachother in the night'
-                    dest_idx = fleet.position.translate(fleet.direction.to_point(), configuration.size).to_index(configuration.size)
-                    source_idx = fleet.position.to_index(configuration.size)
-                    move_key = (dest_idx, source_idx) if dest_idx < source_idx else (source_idx, dest_idx)
-                    player_fleet_moves[move_key].append(fleet.id)
-                    # continue moving in the fleet's direction
-                    fleet.cell._fleet_id = None
-                    fleet._position = fleet.position.translate(fleet.direction.to_point(), configuration.size)
-                    fleet._halite *= (1 - board.configuration.move_cost)
-                    # We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
+                    continue
+
+                if fleet.flight_plan and fleet.flight_plan[0].isalpha():
+                    fleet._direction = Direction.from_char(fleet.flight_plan[0])
+                    fleet._flight_plan = fleet.flight_plan[1:]
+                elif fleet.flight_plan:
+                    idx = find_first_non_digit(fleet.flight_plan)
+                    digits = int(fleet.flight_plan[:idx])
+                    rest = fleet.flight_plan[idx:]
+                    digits -= 1
+                    if digits > 0:
+                        fleet._flight_plan = str(digits) + rest
+                    else:
+                        fleet._flight_plan = rest
+
+                # see if any allied fleets are 'passing eachother in the night'
+                dest_idx = fleet.position.translate(fleet.direction.to_point(), configuration.size).to_index(configuration.size)
+                source_idx = fleet.position.to_index(configuration.size)
+                move_key = (dest_idx, source_idx) if dest_idx < source_idx else (source_idx, dest_idx)
+                player_fleet_moves[move_key].append(fleet.id)
+                # continue moving in the fleet's direction
+                fleet.cell._fleet_id = None
+                fleet._position = fleet.position.translate(fleet.direction.to_point(), configuration.size)
+                fleet._halite *= (1 - board.configuration.move_cost)
+                # We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
 
             def combine_fleets(fid1: FleetId, fid2: FleetId) -> FleetId:
                 f1 = board.fleets[fid1]
@@ -889,8 +910,6 @@ class Board:
             if delta_halite > 0:
                 fleet._halite += delta_halite
                 cell._halite -= delta_halite
-            # Clear the ship's action so it doesn't repeat the same action automatically
-            fleet.next_action = None
 
         # Regenerate halite in cells
         for cell in board.cells.values():
