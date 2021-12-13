@@ -239,6 +239,21 @@ async function renderer({
 
   const getColRow = pos => [pos % size, Math.floor(pos / size)];
 
+  const getDirStrFromIdx = (dirIdx) => {
+    switch(dirIdx) {
+      case 0:
+        return "NORTH"
+      case 1:
+        return "EAST"
+      case 2:
+        return "SOUTH"
+      case 3:
+        return "WEST"
+      default:
+        throw new Error(`"${dirIdx}" is not a valid direction idx.`);
+    }
+  }
+
   const getMovePos = (pos, direction) => {
     const [col, row] = getColRow(pos);
     switch (direction) {
@@ -444,7 +459,7 @@ async function renderer({
 
   // Draw Shipyards.
   players.forEach((player, playerIndex) => {
-    Object.values(player[1]).forEach(pos => {
+    Object.entries(player[1]).forEach(([uid, [pos, shipCount, turnsControlled]]) => {
       const shipx = 500 + 100 * playerIndex;
       const ss = fixedCellSize;
       const { dx, dy, ds } = getCoords(pos);
@@ -454,7 +469,7 @@ async function renderer({
 
   // Draw Ships and a smaller Halite icon according to their current cargo.
   players.forEach((player, playerIndex) => {
-    Object.entries(player[2]).forEach(([uid, [pos, cargo, shipCount, directionIdx]]) => {
+    Object.entries(player[2]).forEach(([uid, [pos, cargo, shipCount, directionIdx, flightPath]]) => {
       const shipx = 500 + 100 * playerIndex;
       const flamex = 200 + 100 * Math.min(2, Math.floor(3 * frame));
       const { dx, dy, ds } = getCoords(pos);
@@ -467,7 +482,8 @@ async function renderer({
   });
 
   // Draw collisions.
-  if (step > 0) {
+  // todo(bovard): enable this later
+  if (step > 1) {
     const board = Array(size * size)
       .fill(0)
       .map(() => ({ shipyard: -1, ship: null, collision: false }));
@@ -484,16 +500,11 @@ async function renderer({
         const [, shipyards, fleets] = player;
         const action = environment.steps[step][playerIndex].action || {};
         // Stationary ships collecting Halite.
-        Object.entries(fleets).forEach(([uid, [pos]]) => {
+        Object.entries(fleets).forEach(([uid, [pos, cargo, shipCount, directionIdx, flightPath]]) => {
           if (uid in action) return;
           if (board[pos].ship !== uid) board[pos].collision = true;
-        });
-        // Convert to shipyard, Spawn ship, or Move ship.
-        Object.entries(action).forEach(([uid, value]) => {
-          if (value !== "CONVERT") {
-            const toPos = getMovePos(fleets[uid][0], value);
-            if (board[toPos].ship !== uid) board[toPos].collision = true;
-          }
+          const toPos = getMovePos(fleets[uid][0], getDirStrFromIdx(directionIdx));
+          if (board[toPos].ship !== uid) board[toPos].collision = true;
         });
       }
     );

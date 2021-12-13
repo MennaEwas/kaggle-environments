@@ -939,7 +939,7 @@ class Board:
 
         board._step += 1
 
-        self.print()
+        # self.print()
 
         return board
 
