@@ -708,6 +708,19 @@ class Board:
             shipyard.cell._shipyard_id = None
         del self._shipyards[shipyard.id]
 
+    def get_fleet_at_point(self: 'Board', position: Point) -> Optional[Fleet]:
+        matches = [fleet for fleet in self.fleets.values() if fleet.position == position]
+        if matches:
+            assert len(matches) == 1
+            return matches[0]
+        return None
+
+    def get_shipyard_at_point(self: 'Board', position: Point) -> Optional[Shipyard]:
+        matches = [shipyard for shipyard in self.shipyard.values() if shipyard.position == position]
+        if matches:
+            assert len(matches) == 1
+            return matches[0]
+        return None
 
     def print(self: 'Board') -> None:
         size = self.configuration.size
@@ -783,7 +796,6 @@ class Board:
                         return i
                 return 0
 
-            player_fleet_moves = DefaultDict(list)
             for fleet in player.fleets:
                 if fleet.flight_plan and fleet.flight_plan[0] == "C" and fleet.ship_count >= convert_cost and fleet.cell.shipyard_id is None:
                     player._halite += fleet.halite
@@ -804,11 +816,6 @@ class Board:
                     else:
                         fleet._flight_plan = rest
 
-                # see if any allied fleets are 'passing eachother in the night'
-                dest_idx = fleet.position.translate(fleet.direction.to_point(), configuration.size).to_index(configuration.size)
-                source_idx = fleet.position.to_index(configuration.size)
-                move_key = (dest_idx, source_idx) if dest_idx < source_idx else (source_idx, dest_idx)
-                player_fleet_moves[move_key].append(fleet.id)
                 # continue moving in the fleet's direction
                 fleet.cell._fleet_id = None
                 fleet._position = fleet.position.translate(fleet.direction.to_point(), configuration.size)
@@ -826,11 +833,6 @@ class Board:
                 board._delete_fleet(f2)
                 return fid1
 
-            # resolve any fleets are 'passing eachother in the night'
-            for value in player_fleet_moves.values():
-                if len(value) == 2:
-                    combine_fleets(value[0], value[1])
-                    
             # resolve any allied fleets that ended up in the same square
             fleets_by_loc = group_by(player.fleets, lambda fleet: fleet.position.to_index(configuration.size))
             for value in fleets_by_loc.values():
@@ -903,6 +905,23 @@ class Board:
                 shipyard._ship_count += fleet.ship_count
                 board._delete_fleet(fleet)
 
+        # apply fleet to fleet damage on all orthagonally adjacent cells
+        incoming_dmg = DefaultDict(int)
+        for fleet in board.fleets.values():
+            for direction in Direction.moves():
+                curr_pos = fleet.position.translate(direction.to_point(), board.configuration.size)
+                fleet_at_pos = board.get_fleet_at_point(curr_pos)
+                if fleet_at_pos and not fleet_at_pos.player_id == fleet.id:
+                    incoming_dmg[fleet_at_pos.id] += fleet.ship_count
+
+        for fleet_id, damage in incoming_dmg.items():
+            fleet = board.fleets[fleet_id]
+            if damage >= fleet.ship_count:
+                fleet.cell._halite += fleet.halite
+                board._delete_fleet(fleet)
+            else:
+                fleet._ship_count -= damage
+
         # Collect halite from cells into fleets
         for fleet in board.fleets.values():
             cell = fleet.cell
@@ -914,9 +933,9 @@ class Board:
         # Regenerate halite in cells
         for cell in board.cells.values():
             if cell.fleet_id is None and cell.shipyard_id is None:
-                next_halite = round(cell.halite * (1 + configuration.regen_rate), 3)
-                cell._halite = min(next_halite, configuration.max_cell_halite)
-                # Lets just check and make sure.
+                if cell.halite < configuration.max_cell_halite:
+                    next_halite = round(cell.halite * (1 + configuration.regen_rate), 3)
+                    cell._halite = next_halite
 
         board._step += 1
 
