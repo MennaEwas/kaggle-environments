@@ -254,6 +254,21 @@ async function renderer({
     }
   }
 
+  const getDirStrFromChar = (dirChar) => {
+    switch(dirChar) {
+      case "N":
+        return "NORTH"
+      case "E":
+        return "EAST"
+      case "S":
+        return "SOUTH"
+      case "W":
+        return "WEST"
+      default:
+        throw new Error(`"${dirChar}" is not a valid direction char.`);
+    }
+  }
+
   const getMovePos = (pos, direction) => {
     const [col, row] = getColRow(pos);
     switch (direction) {
@@ -482,29 +497,32 @@ async function renderer({
   });
 
   // Draw collisions.
-  // todo(bovard): enable this later
   if (step > 1) {
     const board = Array(size * size)
       .fill(0)
-      .map(() => ({ shipyard: -1, ship: null, collision: false }));
+      .map(() => ({ shipyard: -1, ship: null, collision: false, shipPlayer: null }));
     players.forEach((player, playerIndex) => {
-      const [, shipyards, ships] = player;
-      Object.values(shipyards).forEach(
-        pos => (board[pos].shipyard = playerIndex)
-      );
-      Object.entries(ships).forEach(([uid, [pos]]) => (board[pos].ship = uid));
+      const [playerInfo, shipyards, ships] = player;
+      Object.entries(shipyards).forEach(([uid, [pos, shipCount, turnsControlled]]) => (board[pos].shipyard = playerIndex));
+      Object.entries(ships).forEach(([uid, [pos, cargo, shipCount, directionIdx, flightPath]]) => {
+        board[pos].ship = uid;
+        board[pos].shipPlayer = playerIndex
+      });
     });
     environment.steps[step - 1][0].observation.players.forEach(
       (player, playerIndex) => {
         const status = state[playerIndex].status;
         const [, shipyards, fleets] = player;
         const action = environment.steps[step][playerIndex].action || {};
-        // Stationary ships collecting Halite.
+
         Object.entries(fleets).forEach(([uid, [pos, cargo, shipCount, directionIdx, flightPath]]) => {
-          if (uid in action) return;
-          if (board[pos].ship !== uid) board[pos].collision = true;
-          const toPos = getMovePos(fleets[uid][0], getDirStrFromIdx(directionIdx));
-          if (board[toPos].ship !== uid) board[toPos].collision = true;
+          var dir = getDirStrFromIdx(directionIdx)
+          if (flightPath.length > 0 && "NESW".includes(flightPath[0])) {
+            dir = getDirStrFromChar(flightPath[0])
+          }
+          const toPos = getMovePos(fleets[uid][0], dir);
+          if (board[toPos].shipyard !== playerIndex) board[toPos].collision = true
+          if (board[toPos].shipPlayer !== playerIndex) board[toPos].collision = true;
         });
       }
     );

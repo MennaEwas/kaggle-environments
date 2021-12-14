@@ -716,7 +716,7 @@ class Board:
         return None
 
     def get_shipyard_at_point(self: 'Board', position: Point) -> Optional[Shipyard]:
-        matches = [shipyard for shipyard in self.shipyard.values() if shipyard.position == position]
+        matches = [shipyard for shipyard in self.shipyards.values() if shipyard.position == position]
         if matches:
             assert len(matches) == 1
             return matches[0]
@@ -911,7 +911,7 @@ class Board:
             for direction in Direction.moves():
                 curr_pos = fleet.position.translate(direction.to_point(), board.configuration.size)
                 fleet_at_pos = board.get_fleet_at_point(curr_pos)
-                if fleet_at_pos and not fleet_at_pos.player_id == fleet.id:
+                if fleet_at_pos and not fleet_at_pos.player_id == fleet.player_id:
                     incoming_dmg[fleet_at_pos.id] += fleet.ship_count
 
         for fleet_id, damage in incoming_dmg.items():
