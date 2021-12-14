@@ -298,18 +298,6 @@ async function renderer({
     };
   };
 
-  const getShipDir = (playerIndex, uid) => {
-    for (let s = step; s >= 0; s--) {
-      const action = environment.steps[s][playerIndex].action || {};
-      if (uid in action) return Math.max(directions.indexOf(action[uid]), 0);
-    }
-    for (let s = step + 1; s < environment.steps.length; s++) {
-      const action = environment.steps[s][playerIndex].action || {};
-      if (uid in action) return Math.max(directions.indexOf(action[uid]), 0);
-    }
-    return 0;
-  };
-
   // First time setup.
   if (!parent.querySelector("#buffer")) {
     const [bufferCanvas, ctx] = getCanvas("buffer", {
@@ -546,14 +534,16 @@ async function renderer({
 
   const getHalite = player => player[0];
   const getCargo = player => Object.entries(player[2]).map(([, v]) => v[1]).reduce((a, b) => a + b, 0);
-  const getNumShips = player => Object.entries(player[2]).length;
+  const getShipCount = player => Object.entries(player[2]).map(([, v]) => v[2]).reduce((a, b) => a + b, 0) + Object.entries(player[1]).map(([, v]) => v[1]).reduce((a, b) => a + b, 0);
+  const getNumFleets = player => Object.entries(player[2]).length;
   const getNumShipyards = player => Object.entries(player[1]).length;
   
   // Writes two lines, "Halite" and "Cargo", and returns y value for what would be the third line.
   const writeScoreboardText = (ctx, player, x, y) => {
     ctx.fillText(`Halite: ${getHalite(player)}`, x, y);
     ctx.fillText(`Cargo: ${getCargo(player)}`, x, y + scoreboardLineYDiffPx);
-    return y + 2 * scoreboardLineYDiffPx;
+    ctx.fillText(`Ships: ${getShipCount(player)}`, x, y + 2 * scoreboardLineYDiffPx);
+    return y + 3 * scoreboardLineYDiffPx;
   }
 
   const scoreboardShipSizePx = scoreboardFontSizePx * 1.7;
@@ -567,9 +557,22 @@ async function renderer({
   const scoreboardShipXPaddingPx = scoreboardShipSizePx + scoreboardPaddingPx;
   const drawShipAndYardCounts = (ctx, player, playerIndex, x, y, iconSize = scoreboardShipSizePx) => {
     drawShip(ctx, playerIndex, x, y);
-    ctx.fillText(`x ${getNumShips(player)}`, x + scoreboardShipXPaddingPx, y + 0.28 * iconSize);
+    ctx.fillText(`x ${getNumFleets(player)}`, x + scoreboardShipXPaddingPx, y + 0.28 * iconSize);
     drawShipYard(ctx, playerIndex, x, y + iconSize);
     ctx.fillText(`x ${getNumShipyards(player)}`, x + scoreboardShipXPaddingPx, y + 1.38 * iconSize);
+    return y + 2.38 * iconSize;
+  }
+
+  const drawFleetLaunches = (ctx, player, playerIndex, x, y, iconSize = scoreboardShipSizePx) => {
+    const actions = environment.steps[step][playerIndex].action || {};
+    const launches = Object.values(actions).filter(a => a.includes("LAUNCH")).map(a => a.substring(7).replace(/_/, " "));
+    if (launches.length > 0) {
+      ctx.fillText("Launches:", x, y);
+    }
+    for (let i = 0; i < launches.length; i++) {
+      ctx.fillText(launches[i], x, y + (i + 1) * scoreboardLineYDiffPx);
+    }
+
   }
 
   // Render Scoreboard for each player, if we have enough room on the sides of the window.
@@ -589,7 +592,8 @@ async function renderer({
         : topLeftCell.dy;
       const startY = playerIndex < 2 ? topStartY : bottomStartY;
       const nextY = writeScoreboardText(fgCtx, player, x, startY);
-      drawShipAndYardCounts(fgCtx, player, playerIndex, x, nextY);
+      const actionY = drawShipAndYardCounts(fgCtx, player, playerIndex, x, nextY);
+      drawFleetLaunches(fgCtx, player, playerIndex, x, actionY)
     });
   }
 

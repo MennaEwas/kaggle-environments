@@ -143,6 +143,15 @@ class Direction(Enum):
             None
         )
 
+    def opposite(self) -> 'Direction':
+        return (
+            Direction.SOUTH if self == Direction.NORTH else
+            Direction.WEST if self == Direction.EAST else
+            Direction.NORTH if self == Direction.SOUTH else
+            Direction.EAST if self == Direction.WEST else
+            None
+        )
+
     @staticmethod
     def from_str(str_dir: str):
         return  (
@@ -236,6 +245,7 @@ class ShipyardAction:
         assert number_ships > 0, "must be a positive number_ships"
         assert number_ships == int(number_ships), "must be an integer number_ships"
         assert flight_plan is not None and len(flight_plan) > 0, "flight_plan must be a str of len > 0"
+        assert flight_plan[0].isalpha() and flight_plan[0] in "NESW", "flight_plan must start with a valid direciton NESW"
         return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, flight_plan)
 
     @staticmethod
@@ -377,10 +387,10 @@ class Fleet:
         """ln(ship_count) / 10"""
         return math.log(self.ship_count) / 10
 
-    @property
-    def max_flight_plan_len(self) -> int:
+    @staticmethod
+    def max_flight_plan_len_for_ship_count(ship_count) -> int:
         """Returns the length of the longest possible flight plan this fleet can be assigned"""
-        return math.floor(2 * math.log(self.ship_count)) + 1
+        return math.floor(2 * math.log(ship_count)) + 1
 
     @property
     def _observation(self) -> List[int]:
@@ -783,7 +793,11 @@ class Board:
                     shipyard._ship_count += shipyard.next_action.num_ships
                 elif shipyard.next_action.action_type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
                     shipyard._ship_count -= shipyard.next_action.num_ships
-                    direction = Direction.from_char(shipyard.next_action.flight_plan[0])
+                    flight_plan = shipyard.next_action.flight_plan
+                    direction = Direction.from_char(flight_plan[0])
+                    max_flight_plan_len = Fleet.max_flight_plan_len_for_ship_count(shipyard.next_action.num_ships)
+                    if len(flight_plan) > max_flight_plan_len:
+                        flight_plan = flight_plan[:max_flight_plan_len]
                     board._add_fleet(Fleet(FleetId(create_uid()), shipyard.next_action.num_ships, direction, shipyard.position, 0, shipyard.next_action.flight_plan, player.id, board))
                 
                 # Clear the shipyard's action so it doesn't repeat the same action automatically
@@ -802,6 +816,9 @@ class Board:
                     board._add_shipyard(Shipyard(ShipyardId(create_uid()), fleet.ship_count - convert_cost, fleet.position, player.id, 0, board))
                     board._delete_fleet(fleet)
                     continue
+                elif fleet.flight_plan and fleet.flight_plan[0] == "C":
+                    # couldn't build, remove the Convert and continue with flight plan
+                    fleet._flight_plan = fleet.flight_plan[1:]
 
                 if fleet.flight_plan and fleet.flight_plan[0].isalpha():
                     fleet._direction = Direction.from_char(fleet.flight_plan[0])
@@ -818,6 +835,8 @@ class Board:
 
                 # continue moving in the fleet's direction
                 fleet.cell._fleet_id = None
+                if not fleet.direction:
+                    print("fleet without direction", fleet.id)
                 fleet._position = fleet.position.translate(fleet.direction.to_point(), configuration.size)
                 fleet._halite *= (1 - board.configuration.move_cost)
                 # We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
