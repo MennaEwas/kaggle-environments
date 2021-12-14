@@ -509,12 +509,20 @@ async function renderer({
             dir = getDirStrFromChar(flightPath[0])
           }
           const toPos = getMovePos(pos, dir);
-           if (board[toPos].shipyard !== -1 && board[toPos].shipyard !== playerIndex) {
-             board[toPos].collision = true
-           }
-           if (board[toPos].shipyard === -1 && board[toPos].shipPlayer !== playerIndex) {
-             board[toPos].collision = true;
-           }
+            // if there is an enemy shipyard in the next square,
+            const shipyardNextSquare = board[toPos].shipyard !== -1
+            const shipyardPreviousSquare = board[pos].shipyard !== -1
+            const enemyShipNextSquare = board[toPos].shipPlayer !== playerIndex
+            const enemyShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard !== playerIndex
+            const alliedShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard === playerIndex
+            const alliedShipyardPreviousSquare = shipyardPreviousSquare && board[pos].shipyard === playerIndex
+            if (alliedShipyardPreviousSquare || alliedShipyardNextSquare) {
+              // don't explode
+            } else if (enemyShipyardNextSquare) {
+              board[toPos].collision = true
+            } else if (enemyShipNextSquare) {
+              board[toPos].collision = true;
+            }
         });
       }
     );

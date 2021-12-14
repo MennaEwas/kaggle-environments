@@ -9,7 +9,7 @@
     "startingHalite": {
       "description": "The starting amount of halite available on the board.",
       "type": "integer",
-      "default": 24000
+      "default": 12000
     },
     "size": {
       "description": "The number of cells vertically and horizontally on the board.",
