@@ -49,8 +49,8 @@ def random_agent(board):
         # 20% chance to launch a fleet
         if randint(0, 4) == 0 and shipyard.ship_count > 10:
             dir_str = Direction.random_direction().to_char()
-            # dir2_str = Direction.random_direction().to_char()
-            flight_plan = dir_str # + str(randint(1, 10)) + dir2_str
+            dir2_str = Direction.random_direction().to_char()
+            flight_plan = dir_str + str(randint(1, 10)) + dir2_str
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(shipyard.ship_count, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
@@ -143,10 +143,10 @@ def populate_board(state, env):
     if num_agents == 1:
         starting_positions[0] = size * (size // 2) + size // 2
     elif num_agents == 2:
-        #starting_positions[0] = size * (size // 2 - 1) + size // 4
-        #starting_positions[1] = size * (size // 2 + 1) + math.ceil(3 * size / 4) - 1
-        starting_positions[0] = size * (size // 2) + size // 4
-        starting_positions[1] = size * (size // 2) + math.ceil(3 * size / 4)
+        starting_positions[0] = size * (size // 2 - 1) + size // 4
+        starting_positions[1] = size * (size // 2 + 1) + math.ceil(3 * size / 4) - 1
+        #starting_positions[0] = size * (size // 2) + size // 4
+        #starting_positions[1] = size * (size // 2) + math.ceil(3 * size / 4)
     elif num_agents == 4:
         starting_positions[0] = size * (size // 4 + 1) + size // 4 - 1
         starting_positions[1] = size * (size // 4 - 1) + 3 * size // 4 - 1

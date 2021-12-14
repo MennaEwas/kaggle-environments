@@ -14,7 +14,7 @@
     "size": {
       "description": "The number of cells vertically and horizontally on the board.",
       "type": "integer",
-      "default": 41,
+      "default": 31,
       "minimum": 2
     },
     "spawnCost": {

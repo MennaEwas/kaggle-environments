@@ -520,9 +520,13 @@ async function renderer({
           if (flightPath.length > 0 && "NESW".includes(flightPath[0])) {
             dir = getDirStrFromChar(flightPath[0])
           }
-          const toPos = getMovePos(fleets[uid][0], dir);
-          if (board[toPos].shipyard !== playerIndex) board[toPos].collision = true
-          if (board[toPos].shipPlayer !== playerIndex) board[toPos].collision = true;
+          const toPos = getMovePos(pos, dir);
+           if (board[toPos].shipyard !== -1 && board[toPos].shipyard !== playerIndex) {
+             board[toPos].collision = true
+           }
+           if (board[toPos].shipyard === -1 && board[toPos].shipPlayer !== playerIndex) {
+             board[toPos].collision = true;
+           }
         });
       }
     );
