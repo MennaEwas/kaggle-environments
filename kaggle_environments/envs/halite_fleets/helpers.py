@@ -76,16 +76,6 @@ class Configuration(kaggle_environments.helpers.Configuration):
         return self["convertCost"]
 
     @property
-    def move_cost(self) -> float:
-        """The percent deducted from fleet's current halite per move."""
-        return self["moveCost"]
-
-    @property
-    def collect_rate(self) -> float:
-        """The rate of halite collected by a fleet from a cell when moving through."""
-        return self["collectRate"]
-
-    @property
     def regen_rate(self) -> float:
         """The rate halite regenerates on the board."""
         return self["regenRate"]
@@ -93,7 +83,7 @@ class Configuration(kaggle_environments.helpers.Configuration):
     @property
     def max_cell_halite(self) -> int:
         """The maximum halite that can be in any cell."""
-        return self["maxCellHalite"]
+        return self["maxRegenCellHalite"]
 
     @property
     def random_seed(self) -> int:
@@ -835,10 +825,7 @@ class Board:
 
                 # continue moving in the fleet's direction
                 fleet.cell._fleet_id = None
-                if not fleet.direction:
-                    print("fleet without direction", fleet.id)
                 fleet._position = fleet.position.translate(fleet.direction.to_point(), configuration.size)
-                fleet._halite *= (1 - board.configuration.move_cost)
                 # We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
 
             def combine_fleets(fid1: FleetId, fid2: FleetId) -> FleetId:

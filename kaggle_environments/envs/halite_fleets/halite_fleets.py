@@ -66,27 +66,28 @@ def simple_agent(board):
     me = board.current_player
     remaining_halite = me.halite
     shipyards = me.shipyards
+    convert_cost = board.configuration.convert_cost
     # randomize shipyard order
     shipyards = sample(shipyards, len(shipyards))
     for shipyard in shipyards:
-        if remaining_halite > 1000:
-            if shipyard.ship_count >= 210:
-                gap1 = str(randint(3, 10))
-                gap2 = str(randint(3, 10))
+        if remaining_halite > 1000 and shipyard.max_spawn > 5:
+            if shipyard.ship_count >= convert_cost + 10:
+                gap1 = str(randint(3, 9))
+                gap2 = str(randint(3, 9))
                 start_dir = randint(0, 3)
                 flight_plan = Direction.moves()[start_dir].to_char() + gap1
                 next_dir = (start_dir + 1) % 4
                 flight_plan += Direction.moves()[next_dir].to_char() + gap2
                 next_dir = (next_dir + 1) % 4
                 flight_plan += "C"
-                shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(210, int(shipyard.ship_count/2)), flight_plan)
+                shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 10, int(shipyard.ship_count/2)), flight_plan)
             else:
                 shipyard.next_action = ShipyardAction.spawn_ships(shipyard.max_spawn)
 
         # launch a large fleet if able
         elif shipyard.ship_count >= 55:
-            gap1 = str(randint(3, 10))
-            gap2 = str(randint(3, 10))
+            gap1 = str(randint(3, 9))
+            gap2 = str(randint(3, 9))
             start_dir = randint(0, 3)
             flight_plan = Direction.moves()[start_dir].to_char() + gap1
             next_dir = (start_dir + 1) % 4

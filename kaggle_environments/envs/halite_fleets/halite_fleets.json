@@ -26,19 +26,7 @@
     "convertCost": {
       "description": "The number of ships required to create a shipyard.",
       "type": "integer",
-      "default": 200,
-      "minimum": 0
-    },
-    "moveCost": {
-      "description": "The percent deducted from ship's current halite per move.",
-      "type": "number",
-      "default": 0,
-      "minimum": 0
-    },
-    "collectRate": {
-      "description": "The rate of halite collected by a fleet from a cell each cell.",
-      "type": "number",
-      "default": 0.25,
+      "default": 100,
       "minimum": 0
     },
     "regenRate": {
@@ -47,8 +35,8 @@
       "default": 0.02,
       "minimum": 0
     },
-    "maxCellHalite": {
-      "description": "The maximum halite that can be in any cell.",
+    "maxRegenCellHalite": {
+      "description": "The maximum halite over which a cell won't regenerate.",
       "type": "integer",
       "default": 500,
       "minimum": 0
