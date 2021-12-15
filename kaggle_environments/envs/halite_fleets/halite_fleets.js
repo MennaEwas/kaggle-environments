@@ -579,14 +579,15 @@ async function renderer({
     return y + 2.38 * iconSize;
   }
 
-  const drawFleetLaunches = (ctx, player, playerIndex, x, y, iconSize = scoreboardShipSizePx) => {
+  const drawFleetLaunches = (ctx, player, playerIndex, x, y, reverse) => {
     const actions = environment.steps[step][playerIndex].action || {};
     const launches = Object.values(actions).filter(a => a.includes("LAUNCH")).map(a => a.substring(7).replace(/_/, " "));
     if (launches.length > 0) {
       ctx.fillText("Launches:", x, y);
     }
+    const dir = reverse ? -1 : 1;
     for (let i = 0; i < launches.length; i++) {
-      ctx.fillText(launches[i], x, y + (i + 1) * scoreboardLineYDiffPx);
+      ctx.fillText(launches[i], x, y + dir * (i + 1) * scoreboardLineYDiffPx);
     }
 
   }
@@ -609,7 +610,11 @@ async function renderer({
       const startY = playerIndex < 2 ? topStartY : bottomStartY;
       const nextY = writeScoreboardText(fgCtx, player, x, startY);
       const actionY = drawShipAndYardCounts(fgCtx, player, playerIndex, x, nextY);
-      drawFleetLaunches(fgCtx, player, playerIndex, x, actionY)
+      if (playerIndex > 1) {
+        drawFleetLaunches(fgCtx, player, playerIndex, x, startY - scoreboardLineYDiffPx, true)
+      } else {
+        drawFleetLaunches(fgCtx, player, playerIndex, x, actionY)
+      }
     });
   }
 
