@@ -381,6 +381,7 @@ async function renderer({
     clear: true,
   });
 
+
   // Expand storage.
   const {
     cellInset,
@@ -461,12 +462,18 @@ async function renderer({
   // Render Foreground (every frame).
 
   // Draw Shipyards.
+  const shipFontSizePx = Math.round(height / 64);
+  fgCtx.fillStyle = "#FFFFFF";
+  fgCtx.font = `bold ${shipFontSizePx}px sans-serif`;
+  fgCtx.textBaseline = "top";
+  fgCtx.textAlign = "left";
   players.forEach((player, playerIndex) => {
     Object.entries(player[1]).forEach(([uid, [pos, shipCount, turnsControlled]]) => {
       const shipx = 500 + 100 * playerIndex;
       const ss = fixedCellSize;
       const { dx, dy, ds } = getCoords(pos);
       fgCtx.drawImage(bufferCanvas, shipx, 400, ss, ss, dx, dy, ds, ds);
+      fgCtx.fillText(shipCount, dx, dy)
     });
   });
 
@@ -480,6 +487,7 @@ async function renderer({
       const ss = fixedCellSize;
       fgCtx.drawImage(bufferCanvas, shipx, sy, ss, ss, dx, dy, ds, ds);
       fgCtx.drawImage(bufferCanvas, flamex, sy, ss, ss, dx, dy, ds, ds);
+      fgCtx.fillText(shipCount, dx, dy)
       renderHalite(fgCtx, pos, cargo, 1500, 0.6, false);
     });
   });
