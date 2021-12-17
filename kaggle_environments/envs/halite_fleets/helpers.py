@@ -395,7 +395,7 @@ class Fleet:
         return self.direction.to_index() > other.direction.to_index()
 
 
-upgrade_times = [pow(i,2) + 5 for i in range(1, 10)]
+upgrade_times = [pow(i,2) for i in range(1, 10)]
 SPAWN_VALUES = []
 current = 0
 for t in upgrade_times:
