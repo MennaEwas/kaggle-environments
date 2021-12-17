@@ -425,6 +425,8 @@ class Shipyard:
     @property
     def max_spawn(self) -> int:
         spawn_values = (11, 25, 44, 70, 105, 151, 210, 284, 375)
+        modifier = 5
+        spawn_values = [v - (i + 1) * modifier for v, i in enumerate(spawn_values)]
         for idx, target in enumerate(spawn_values):
             if self._turns_controlled < target:
                 return idx + 1

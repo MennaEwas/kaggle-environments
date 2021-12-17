@@ -37,6 +37,9 @@ def get_to_pos(size, pos, direction):
     elif direction == "WEST":
         return pos - 1 if col > 0 else (row + 1) * size - 1
 
+@board_agent
+def do_nothing_agent(board):
+    pass
 
 @board_agent
 def random_agent(board):
@@ -107,7 +110,7 @@ def simple_agent(board):
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(2, dir_str)
 
         
-agents = {"random": random_agent, "simple": simple_agent}
+agents = {"random": random_agent, "simple": simple_agent, "do_nothing": do_nothing_agent}
 
 
 def populate_board(state, env):
