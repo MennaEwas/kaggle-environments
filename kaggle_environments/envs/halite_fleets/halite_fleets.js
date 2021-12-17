@@ -101,8 +101,11 @@ async function renderer({
       "#FEF545;6,5,2,1,4,.5;4,12,2,1,4,.5;9,11,2,1,4,.5;1,19,2,1,4,.5;6,18,2,1,4,.5;",
     ],
     shipyard: [
+      "",
       "7,0,3,1,14;5,1,5,1,14;3,2,7,1,14;2,3,8,2,14;1,5,9,2,14;0,7,10,3,14;",
+      "1,7,1,1,15;2,5,1,1,15;3,3,1,1,15;5,2,1,1,15;7,1,1,1,15;",
       "2,9,8,1,14;9,2,1,8,14;",
+      "0,8,1,1,15;1,6,1,1,15;2,4,1,1,15;4,3,1,1,15;6,2,1,1,15;",
       "#000B49;7,3,2,6,14;5,4,2,5,14;4,5,1,4,14;3,7,1,2,14;",
     ],
     explosion: [
@@ -364,9 +367,9 @@ async function renderer({
       }
     });
     // Shipyards.
-    colors.players.forEach((color, n) => {
+    colors.ships.forEach((color, n) => {
       move(ctx, { x: 500 + 100 * n, y: 400 }, () => {
-        rects.shipyard.forEach(v => drawRects(ctx, v, color, 5));
+        rects.shipyard.forEach((v, i) => drawRects(ctx, v, color[i], 5));
       });
     })
   }
