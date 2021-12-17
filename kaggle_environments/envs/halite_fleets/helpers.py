@@ -395,6 +395,12 @@ class Fleet:
         return self.direction.to_index() > other.direction.to_index()
 
 
+upgrade_times = [pow(i,2) + 5 for i in range(1, 10)]
+SPAWN_VALUES = []
+current = 0
+for t in upgrade_times:
+    current += t
+    SPAWN_VALUES.append(current)
 
 class Shipyard:
     def __init__(self, shipyard_id: ShipyardId, ship_count: int, position: Point, player_id: PlayerId, turns_controlled: int, board: 'Board', next_action: Optional[ShipyardAction] = None) -> None:
@@ -424,13 +430,10 @@ class Shipyard:
 
     @property
     def max_spawn(self) -> int:
-        spawn_values = (11, 25, 44, 70, 105, 151, 210, 284, 375)
-        modifier = 5
-        spawn_values = [v - (i + 1) * modifier for v, i in enumerate(spawn_values)]
-        for idx, target in enumerate(spawn_values):
+        for idx, target in enumerate(SPAWN_VALUES):
             if self._turns_controlled < target:
                 return idx + 1
-        return len(spawn_values) + 1
+        return len(SPAWN_VALUES) + 1
 
     @property
     def cell(self) -> Cell:

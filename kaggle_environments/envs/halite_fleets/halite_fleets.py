@@ -88,7 +88,8 @@ def simple_agent(board):
                 shipyard.next_action = ShipyardAction.spawn_ships(shipyard.max_spawn)
 
         # launch a large fleet if able
-        elif shipyard.ship_count >= 55:
+
+        elif shipyard.ship_count >= 34:
             gap1 = str(randint(3, 9))
             gap2 = str(randint(3, 9))
             start_dir = randint(0, 3)
@@ -99,7 +100,7 @@ def simple_agent(board):
             flight_plan += Direction.moves()[next_dir].to_char() + gap1
             next_dir = (next_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(55, flight_plan)
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(34, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
             remaining_halite -= board.configuration.spawn_cost

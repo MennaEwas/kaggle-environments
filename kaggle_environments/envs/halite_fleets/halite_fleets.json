@@ -26,7 +26,7 @@
     "convertCost": {
       "description": "The number of ships required to create a shipyard.",
       "type": "integer",
-      "default": 100,
+      "default": 50,
       "minimum": 0
     },
     "regenRate": {
