@@ -70,6 +70,7 @@ def simple_agent(board):
     remaining_halite = me.halite
     shipyards = me.shipyards
     convert_cost = board.configuration.convert_cost
+    spawn_cost = board.configuration.spawn_cost
     # randomize shipyard order
     shipyards = sample(shipyards, len(shipyards))
     for shipyard in shipyards:
@@ -84,12 +85,12 @@ def simple_agent(board):
                 next_dir = (next_dir + 1) % 4
                 flight_plan += "C"
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 10, int(shipyard.ship_count/2)), flight_plan)
-            else:
-                shipyard.next_action = ShipyardAction.spawn_ships(shipyard.max_spawn)
+            elif remaining_halite >= spawn_cost:
+                shipyard.next_action = ShipyardAction.spawn_ships(min(shipyard.max_spawn, int(remaining_halite/spawn_cost)))
 
         # launch a large fleet if able
 
-        elif shipyard.ship_count >= 34:
+        elif shipyard.ship_count >= 21:
             gap1 = str(randint(3, 9))
             gap2 = str(randint(3, 9))
             start_dir = randint(0, 3)
@@ -100,11 +101,12 @@ def simple_agent(board):
             flight_plan += Direction.moves()[next_dir].to_char() + gap1
             next_dir = (next_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(34, flight_plan)
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
             remaining_halite -= board.configuration.spawn_cost
-            shipyard.next_action = ShipyardAction.spawn_ships(shipyard.max_spawn)
+            if remaining_halite >= spawn_cost:
+                shipyard.next_action = ShipyardAction.spawn_ships(min(shipyard.max_spawn, int(remaining_halite/spawn_cost)))
         # else launch a small fleet
         elif shipyard.ship_count >= 2:
             dir_str = Direction.random_direction().to_char()
@@ -232,8 +234,10 @@ def interpreter(state, env):
 
     # Remove players with invalid status or insufficient potential.
     for index, agent in enumerate(state):
-        player_halite, shipyards, ships = obs.players[index]
-        if agent.status == "ACTIVE" and sum([int(s[1]) for s in shipyards.values()]) == 0 and len(ships) == 0 and (len(shipyards) == 0 or player_halite < config.spawnCost):
+        player_halite, shipyards, fleets = obs.players[index]
+        ships_in_shipyards = [int(s[1]) for s in shipyards.values()]
+        can_spawn = len(shipyards) > 0 and player_halite >= config.spawnCost
+        if agent.status == "ACTIVE" and ships_in_shipyards == 0 and len(fleets) == 0 and not can_spawn:
             # Agent can no longer gather any halite
             agent.status = "DONE"
             agent.reward = board.step - board.configuration.episode_steps - 1

@@ -395,7 +395,7 @@ class Fleet:
         return self.direction.to_index() > other.direction.to_index()
 
 
-upgrade_times = [pow(i,2) for i in range(1, 10)]
+upgrade_times = [pow(i,2) + 1 for i in range(1, 10)]
 SPAWN_VALUES = []
 current = 0
 for t in upgrade_times:
@@ -808,6 +808,7 @@ class Board:
             for fleet in player.fleets:
                 if fleet.flight_plan and fleet.flight_plan[0] == "C" and fleet.ship_count >= convert_cost and fleet.cell.shipyard_id is None:
                     player._halite += fleet.halite
+                    fleet.cell._halite = 0
                     board._add_shipyard(Shipyard(ShipyardId(create_uid()), fleet.ship_count - convert_cost, fleet.position, player.id, 0, board))
                     board._delete_fleet(fleet)
                     continue
