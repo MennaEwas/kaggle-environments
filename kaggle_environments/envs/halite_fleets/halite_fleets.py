@@ -37,6 +37,77 @@ def get_to_pos(size, pos, direction):
     elif direction == "WEST":
         return pos - 1 if col > 0 else (row + 1) * size - 1
 
+def check_path(board, start, dirs, dist_a, dist_b, collection_rate):
+    halite = 0
+    npv = .999
+    current = start
+    for idx, d in enumerate(dirs):
+        for _ in range(dist_a + 1 if idx % 2 == 0 else dist_b + 1):
+            current = current.translate(d.to_point(), board.configuration.size)
+            halite += (board.cells.get(current).halite or 0) * collection_rate * npv
+            npv *= npv
+    return halite / (2 * (dist_a + dist_b))
+        
+
+@board_agent
+def simp_agent(board):
+    me = board.current_player
+    remaining_halite = me.halite
+    shipyards = me.shipyards
+    convert_cost = board.configuration.convert_cost
+    spawn_cost = board.configuration.spawn_cost
+    # randomize shipyard order
+    shipyards = sample(shipyards, len(shipyards))
+    for shipyard in shipyards:
+        if remaining_halite > 500 and shipyard.max_spawn > 5:
+            if shipyard.ship_count >= convert_cost + 7:
+                gap1 = str(randint(3, 9))
+                gap2 = str(randint(3, 9))
+                start_dir = randint(0, 3)
+                flight_plan = Direction.moves()[start_dir].to_char() + gap1
+                next_dir = (start_dir + 1) % 4
+                flight_plan += Direction.moves()[next_dir].to_char() + gap2
+                next_dir = (next_dir + 1) % 4
+                flight_plan += "C"
+                shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 7, int(shipyard.ship_count/2)), flight_plan)
+            elif remaining_halite >= spawn_cost:
+                shipyard.next_action = ShipyardAction.spawn_ships(min(shipyard.max_spawn, int(remaining_halite/spawn_cost)))
+
+        # launch a large fleet if able
+        elif shipyard.ship_count >= 21:
+            best_h = 0
+            best_gap1 = 5
+            best_gap2 = 5
+            start_dir = randint(0, 3)
+            dirs = Direction.moves()[start_dir:] + Direction.moves()[:start_dir]
+            for gap1 in range(1, 10):
+                for gap2 in range(1, 10):
+                    h = check_path(board, shipyard.position, dirs, gap1, gap2, .2)
+                    if h > best_h:
+                        best_h = h
+                        best_gap1 = gap1
+                        best_gap2 = gap2
+            gap1 = str(best_gap1)
+            gap2 = str(best_gap2)
+            flight_plan = Direction.moves()[start_dir].to_char() + gap1
+            next_dir = (start_dir + 1) % 4
+            flight_plan += Direction.moves()[next_dir].to_char() + gap2
+            next_dir = (next_dir + 1) % 4
+            flight_plan += Direction.moves()[next_dir].to_char() + gap1
+            next_dir = (next_dir + 1) % 4
+            flight_plan += Direction.moves()[next_dir].to_char()
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)
+        # else spawn if possible
+        elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
+            remaining_halite -= board.configuration.spawn_cost
+            if remaining_halite >= spawn_cost:
+                shipyard.next_action = ShipyardAction.spawn_ships(min(shipyard.max_spawn, int(remaining_halite/spawn_cost)))
+        # else launch a small fleet
+        elif shipyard.ship_count >= 2:
+            dir_str = Direction.random_direction().to_char()
+            shipyard.next_action = ShipyardAction.launch_ships_in_direction(2, dir_str)
+
+
 @board_agent
 def do_nothing_agent(board):
     pass
@@ -113,7 +184,7 @@ def simple_agent(board):
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(2, dir_str)
 
         
-agents = {"random": random_agent, "simple": simple_agent, "do_nothing": do_nothing_agent}
+agents = {"random": random_agent, "simple": simple_agent, "do_nothing": do_nothing_agent, "simp": simp_agent}
 
 
 def populate_board(state, env):
@@ -237,6 +308,10 @@ def interpreter(state, env):
         player_halite, shipyards, fleets = obs.players[index]
         ships_in_shipyards = [int(s[1]) for s in shipyards.values()]
         can_spawn = len(shipyards) > 0 and player_halite >= config.spawnCost
+        if agent.status == "ACTIVE" and len(shipyards) == 0 and len(fleets) == 0:
+            # Agent can no longer gather any halite
+            agent.status = "DONE"
+            agent.reward = board.step - board.configuration.episode_steps - 1
         if agent.status == "ACTIVE" and ships_in_shipyards == 0 and len(fleets) == 0 and not can_spawn:
             # Agent can no longer gather any halite
             agent.status = "DONE"
