@@ -20,6 +20,7 @@ from os import path
 from random import choice, randint, randrange, sample, seed
 from .helpers import board_agent, Board, ShipyardAction, Direction
 from kaggle_environments import utils
+from kaggle_environments.helpers import Point
 
 
 def get_col_row(size, pos):
@@ -47,6 +48,16 @@ def check_path(board, start, dirs, dist_a, dist_b, collection_rate):
             halite += (board.cells.get(current).halite or 0) * collection_rate * npv
             npv *= npv
     return halite / (2 * (dist_a + dist_b))
+
+def check_location(board, loc, me):
+    if board.cells.get(loc).shipyard and board.cells.get(loc).shipyard.player.id == me.id:
+        return 0
+    halite = 0
+    for i in range(-3, 4):
+        for j in range(-3, 4):
+            pos = loc.translate(Point(i, j), board.configuration.size)
+            halite += board.cells.get(pos).halite or 0
+    return halite
         
 
 @board_agent
@@ -61,13 +72,27 @@ def simp_agent(board):
     for shipyard in shipyards:
         if remaining_halite > 500 and shipyard.max_spawn > 5:
             if shipyard.ship_count >= convert_cost + 7:
-                gap1 = str(randint(3, 9))
-                gap2 = str(randint(3, 9))
                 start_dir = randint(0, 3)
-                flight_plan = Direction.moves()[start_dir].to_char() + gap1
                 next_dir = (start_dir + 1) % 4
+                best_halite = 0
+                best_gap1 = 0
+                best_gap2 = 0
+                for gap1 in range(5, 15, 3):
+                    for gap2 in range(5, 15, 3):
+                        gap2 = randint(3, 9)
+                        diff1 = Direction.from_index(start_dir).to_point() * gap1
+                        diff2 = Direction.from_index(next_dir).to_point() * gap2
+                        diff = diff1 + diff2
+                        pos = shipyard.position.translate(diff, board.configuration.size)
+                        h = check_location(board, pos, me)
+                        if h > best_halite:
+                            best_halite = h
+                            best_gap1 = gap1
+                            best_gap2 = gap2
+                gap1 = str(best_gap1)
+                gap2 = str(best_gap2)
+                flight_plan = Direction.moves()[start_dir].to_char() + gap1
                 flight_plan += Direction.moves()[next_dir].to_char() + gap2
-                next_dir = (next_dir + 1) % 4
                 flight_plan += "C"
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 7, int(shipyard.ship_count/2)), flight_plan)
             elif remaining_halite >= spawn_cost:
