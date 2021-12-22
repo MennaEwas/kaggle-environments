@@ -279,6 +279,10 @@ def populate_board(state, env):
         starting_positions[1] = size * (size // 4 - 1) + 3 * size // 4 - 1
         starting_positions[2] = size * (3 * size // 4 + 1) + size // 4 + 1
         starting_positions[3] = size * (3 * size // 4 - 1) + 3 * size // 4 + 1
+    
+    # clear the halite on the starting square
+    for pos in starting_positions:
+        obs.halite[pos] = 0
 
     # Initialize the players.
     obs.players = []
