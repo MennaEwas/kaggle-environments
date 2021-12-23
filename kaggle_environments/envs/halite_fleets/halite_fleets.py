@@ -40,14 +40,14 @@ def get_to_pos(size, pos, direction):
 
 def check_path(board, start, dirs, dist_a, dist_b, collection_rate):
     halite = 0
-    npv = .999
+    npv = .98
     current = start
+    steps = 2 * (dist_a + dist_b + 2)
     for idx, d in enumerate(dirs):
         for _ in range((dist_a if idx % 2 == 0 else dist_b) + 1):
             current = current.translate(d.to_point(), board.configuration.size)
-            halite += (board.cells.get(current).halite or 0) * collection_rate * npv
-            npv *= npv
-    return halite / (2 * (dist_a + dist_b + 2))
+            halite += (board.cells.get(current).halite or 0) * collection_rate
+    return math.pow(npv, steps) * halite / (2 * (dist_a + dist_b + 2))
 
 def check_location(board, loc, me):
     if board.cells.get(loc).shipyard and board.cells.get(loc).shipyard.player.id == me.id:
@@ -133,11 +133,6 @@ def simp_agent(board):
             remaining_halite -= board.configuration.spawn_cost
             if remaining_halite >= spawn_cost:
                 shipyard.next_action = ShipyardAction.spawn_ships(min(shipyard.max_spawn, int(remaining_halite/spawn_cost)))
-        # else launch a small fleet
-        elif shipyard.ship_count >= 2:
-            dir_str = Direction.random_direction().to_char()
-            shipyard.next_action = ShipyardAction.launch_ships_in_direction(2, dir_str)
-
 
 @board_agent
 def do_nothing_agent(board):

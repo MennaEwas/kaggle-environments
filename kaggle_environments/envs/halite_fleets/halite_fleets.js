@@ -519,24 +519,30 @@ async function renderer({
 
         Object.entries(fleets).forEach(([uid, [pos, cargo, shipCount, directionIdx, flightPath]]) => {
           var dir = getDirStrFromIdx(directionIdx)
+          while (flightPath.length > 0 && flightPath[0] == "0") {
+            flightPath = flightPath.substring(1);
+          }
           if (flightPath.length > 0 && "NESW".includes(flightPath[0])) {
             dir = getDirStrFromChar(flightPath[0])
           }
           const toPos = getMovePos(pos, dir);
-            // if there is an enemy shipyard in the next square,
-            const shipyardNextSquare = board[toPos].shipyard !== -1
-            const shipyardPreviousSquare = board[pos].shipyard !== -1
-            const enemyShipNextSquare = board[toPos].shipPlayer !== playerIndex
-            const enemyShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard !== playerIndex
-            const alliedShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard === playerIndex
-            const alliedShipyardPreviousSquare = shipyardPreviousSquare && board[pos].shipyard === playerIndex
-            if (alliedShipyardPreviousSquare || alliedShipyardNextSquare) {
-              // don't explode
-            } else if (enemyShipyardNextSquare) {
-              board[toPos].collision = true
-            } else if (enemyShipNextSquare) {
-              board[toPos].collision = true;
-            }
+          // if there is an enemy shipyard in the next square,
+          const shipyardNextSquare = board[toPos].shipyard !== -1
+          const shipyardPreviousSquare = board[pos].shipyard !== -1
+          const enemyOrNoShipNextSquare = board[toPos].shipPlayer !== playerIndex
+          const enemyShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard !== playerIndex
+          const alliedShipyardNextSquare = shipyardNextSquare && board[toPos].shipyard === playerIndex
+          const alliedShipyardPreviousSquare = shipyardPreviousSquare && board[pos].shipyard === playerIndex
+          if (alliedShipyardPreviousSquare || alliedShipyardNextSquare) {
+            // don't explode
+          } else if (enemyShipyardNextSquare) {
+            board[toPos].collision = true
+          } else if (enemyOrNoShipNextSquare) {
+            console.log(`ship dir is ${directionIdx} and flight path is ${flightPath}`)
+            console.log(`we chose ${dir}`)
+            console.log(`we are ${pos} moving to ${toPos}`)
+            board[toPos].collision = true;
+          }
         });
       }
     );

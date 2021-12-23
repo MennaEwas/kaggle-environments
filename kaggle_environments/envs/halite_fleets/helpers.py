@@ -250,10 +250,12 @@ class ShipyardAction:
 
     @staticmethod
     def launch_ships_in_direction(number_ships: int, flight_plan: str):
+        flight_plan = flight_plan.upper()
         assert number_ships > 0, "must be a positive number_ships"
         assert number_ships == int(number_ships), "must be an integer number_ships"
         assert flight_plan is not None and len(flight_plan) > 0, "flight_plan must be a str of len > 0"
         assert flight_plan[0].isalpha() and flight_plan[0] in "NESW", "flight_plan must start with a valid direciton NESW"
+        assert all([c in "NESWC0123456789" for c in flight_plan]), "flight_plan can only contain NESWC0-9"
         return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, flight_plan)
 
     @staticmethod
@@ -835,6 +837,9 @@ class Board:
                 return 0
 
             for fleet in player.fleets:
+                # remove any errant 0s
+                while fleet.flight_plan and fleet.flight_plan.startswith("0"):
+                    fleet._flight_plan = fleet.flight_plan[1:]
                 if fleet.flight_plan and fleet.flight_plan[0] == "C" and fleet.ship_count >= convert_cost and fleet.cell.shipyard_id is None:
                     player._halite += fleet.halite
                     fleet.cell._halite = 0
