@@ -1,4 +1,5 @@
 import operator
+import math
 from enum import Enum
 from typing import *
 
@@ -32,6 +33,14 @@ class Point(tuple):
     def translate(self, offset: 'Point', size: int):
         """Translates the current point by offset and wraps it around a board of width and height size"""
         return (self + offset) % size
+
+    def distance_to(self, other: 'Point', size: int):
+        """Translates the current point by offset and wraps it around a board of width and height size"""
+        abs_x = abs(self.x - other.x)
+        dist_x = abs_x if abs_x < size/2 else size - abs_x
+        abs_y = abs(self.y - other.y)
+        dist_y = abs_y if abs_y < size/2 else size - abs_y
+        return dist_x + dist_y
 
     def to_index(self, size: int):
         """

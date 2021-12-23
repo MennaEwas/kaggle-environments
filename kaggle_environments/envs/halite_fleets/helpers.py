@@ -830,10 +830,12 @@ class Board:
                 shipyard.next_action = None
                 shipyard._turns_controlled += 1
 
-            def find_first_non_digit(candiate_str):
-                for i in range(len(candiate_str)):
-                    if not candiate_str[i].isdigit():
+            def find_first_non_digit(candidate_str):
+                for i in range(len(candidate_str)):
+                    if not candidate_str[i].isdigit():
                         return i
+                else:
+                    return len(candidate_str) + 1
                 return 0
 
             for fleet in player.fleets:
