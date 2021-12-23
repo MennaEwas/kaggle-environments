@@ -158,7 +158,8 @@ def simp_agent(board):
     for shipyard in shipyards:
         closest_enemy_shipyard = get_closest_enemy_shipyard(board, shipyard.position, me)
         invading_fleet_size = 100
-        if closest_enemy_shipyard and closest_enemy_shipyard.ship_count < 20 and (remaining_halite >= spawn_cost or shipyard.ship_count >= invading_fleet_size):
+        dist_to_closest_enemy_shipyard = 100 if not closest_enemy_shipyard else shipyard.position.distance_to(closest_enemy_shipyard.position, size)
+        if closest_enemy_shipyard and (closest_enemy_shipyard.ship_count < 20 or dist_to_closest_enemy_shipyard < 10) and (remaining_halite >= spawn_cost or shipyard.ship_count >= invading_fleet_size):
             if shipyard.ship_count >= invading_fleet_size:
                 flight_plan = get_shortest_flight_path_between(shipyard.position, closest_enemy_shipyard.position, size)
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(invading_fleet_size, flight_plan)

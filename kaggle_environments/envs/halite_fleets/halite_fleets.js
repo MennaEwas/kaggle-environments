@@ -593,7 +593,7 @@ async function renderer({
 
   const drawFleetLaunches = (ctx, player, playerIndex, x, y, reverse) => {
     const actions = environment.steps[step][playerIndex].action || {};
-    const launches = Object.values(actions).filter(a => a.includes("LAUNCH")).map(a => a.substring(7).replace(/_/, " "));
+    const launches = Object.values(actions).filter(a => a.includes("LAUNCH")).map(a => a.substring(7).replace(/_/, " ")).sort((a, b) => parseInt(a.split(" ")) < parseInt(b.split(" ") ? -1: 1));
     if (launches.length > 0) {
       ctx.fillText("Launches:", x, y);
     }
