@@ -43,11 +43,11 @@ def check_path(board, start, dirs, dist_a, dist_b, collection_rate):
     npv = .999
     current = start
     for idx, d in enumerate(dirs):
-        for _ in range(dist_a + 1 if idx % 2 == 0 else dist_b + 1):
+        for _ in range((dist_a if idx % 2 == 0 else dist_b) + 1):
             current = current.translate(d.to_point(), board.configuration.size)
             halite += (board.cells.get(current).halite or 0) * collection_rate * npv
             npv *= npv
-    return halite / (2 * (dist_a + dist_b))
+    return halite / (2 * (dist_a + dist_b + 2))
 
 def check_location(board, loc, me):
     if board.cells.get(loc).shipyard and board.cells.get(loc).shipyard.player.id == me.id:
@@ -105,8 +105,8 @@ def simp_agent(board):
             best_gap2 = 5
             start_dir = randint(0, 3)
             dirs = Direction.moves()[start_dir:] + Direction.moves()[:start_dir]
-            for gap1 in range(1, 10):
-                for gap2 in range(1, 10):
+            for gap1 in range(0, 10):
+                for gap2 in range(0, 10):
                     h = check_path(board, shipyard.position, dirs, gap1, gap2, .2)
                     if h > best_h:
                         best_h = h
@@ -114,11 +114,17 @@ def simp_agent(board):
                         best_gap2 = gap2
             gap1 = str(best_gap1)
             gap2 = str(best_gap2)
-            flight_plan = Direction.moves()[start_dir].to_char() + gap1
+            flight_plan = Direction.moves()[start_dir].to_char()
+            if gap1:
+                flight_plan += gap1
             next_dir = (start_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char() + gap2
+            flight_plan += Direction.moves()[next_dir].to_char()
+            if gap2:
+                flight_plan += gap2
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char() + gap1
+            flight_plan += Direction.moves()[next_dir].to_char()
+            if gap1:
+                flight_plan += gap1
             next_dir = (next_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)

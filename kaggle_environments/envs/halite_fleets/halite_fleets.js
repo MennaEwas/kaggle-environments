@@ -592,8 +592,12 @@ async function renderer({
       ctx.fillText("Launches:", x, y);
     }
     const dir = reverse ? -1 : 1;
-    for (let i = 0; i < launches.length; i++) {
+    for (let i = 0; i < Math.min(launches.length, 5); i++) {
       ctx.fillText(launches[i], x, y + dir * (i + 1) * scoreboardLineYDiffPx);
+    }
+    if (launches.length > 5) {
+      ctx.fillText(`+ ${launches.length - 5} more...`, x, y + dir * 6 * scoreboardLineYDiffPx);
+
     }
 
   }

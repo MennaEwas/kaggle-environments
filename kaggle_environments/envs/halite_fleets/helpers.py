@@ -772,6 +772,17 @@ class Board:
             print(row)
         print(self.configuration.size * "=")
 
+    def print_halite(self: 'Board') -> None:
+        size = self.configuration.size
+        print(self.configuration.size * "=")
+        for i in range(size):
+            row = ""
+            for j in range(size):
+                pos = Point(j, size - 1 - i)
+                curr_cell = self.cells[pos]
+                row += str(int(curr_cell.halite)) + ","
+            print(row)
+        print(self.configuration.size * "=")
 
     def next(self) -> 'Board':
         """
