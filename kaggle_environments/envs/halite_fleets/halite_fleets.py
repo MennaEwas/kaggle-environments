@@ -103,7 +103,7 @@ def simp_agent(board):
             best_h = 0
             best_gap1 = 5
             best_gap2 = 5
-            start_dir = randint(0, 3)
+            start_dir = board.step % 4
             dirs = Direction.moves()[start_dir:] + Direction.moves()[:start_dir]
             for gap1 in range(0, 10):
                 for gap2 in range(0, 10):
@@ -115,15 +115,15 @@ def simp_agent(board):
             gap1 = str(best_gap1)
             gap2 = str(best_gap2)
             flight_plan = Direction.moves()[start_dir].to_char()
-            if gap1:
+            if int(gap1):
                 flight_plan += gap1
             next_dir = (start_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
-            if gap2:
+            if int(gap2):
                 flight_plan += gap2
             next_dir = (next_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
-            if gap1:
+            if int(gap1):
                 flight_plan += gap1
             next_dir = (next_dir + 1) % 4
             flight_plan += Direction.moves()[next_dir].to_char()
