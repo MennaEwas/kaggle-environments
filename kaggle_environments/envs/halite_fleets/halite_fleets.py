@@ -115,7 +115,7 @@ def attacker_agent(board):
             best_gap1 = 5
             best_gap2 = 5
             start_dir = board.step % 4
-            dirs = Direction.moves()[start_dir:] + Direction.moves()[:start_dir]
+            dirs = Direction.list_directions()[start_dir:] + Direction.list_directions()[:start_dir]
             for gap1 in range(0, 10):
                 for gap2 in range(0, 10):
                     h = check_path(board, shipyard.position, dirs, gap1, gap2, .2)
@@ -125,19 +125,19 @@ def attacker_agent(board):
                         best_gap2 = gap2
             gap1 = str(best_gap1)
             gap2 = str(best_gap2)
-            flight_plan = Direction.moves()[start_dir].to_char()
+            flight_plan = Direction.list_directions()[start_dir].to_char()
             if int(gap1):
                 flight_plan += gap1
             next_dir = (start_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             if int(gap2):
                 flight_plan += gap2
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             if int(gap1):
                 flight_plan += gap1
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)
         elif shipyard.ship_count > 0 and len(shipyards) > 1:
             flight_plan = get_shortest_flight_path_between(shipyard.position, shipyards[(idx + 1) % len(shipyards)].position, size)
@@ -187,8 +187,8 @@ def simp_agent(board):
                             best_gap2 = gap2
                 gap1 = str(best_gap1)
                 gap2 = str(best_gap2)
-                flight_plan = Direction.moves()[start_dir].to_char() + gap1
-                flight_plan += Direction.moves()[next_dir].to_char() + gap2
+                flight_plan = Direction.list_directions()[start_dir].to_char() + gap1
+                flight_plan += Direction.list_directions()[next_dir].to_char() + gap2
                 flight_plan += "C"
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 7, int(shipyard.ship_count/2)), flight_plan)
             elif remaining_halite >= spawn_cost:
@@ -200,7 +200,7 @@ def simp_agent(board):
             best_gap1 = 5
             best_gap2 = 5
             start_dir = board.step % 4
-            dirs = Direction.moves()[start_dir:] + Direction.moves()[:start_dir]
+            dirs = Direction.list_directions()[start_dir:] + Direction.list_directions()[:start_dir]
             for gap1 in range(0, 10):
                 for gap2 in range(0, 10):
                     h = check_path(board, shipyard.position, dirs, gap1, gap2, .2)
@@ -210,19 +210,19 @@ def simp_agent(board):
                         best_gap2 = gap2
             gap1 = str(best_gap1)
             gap2 = str(best_gap2)
-            flight_plan = Direction.moves()[start_dir].to_char()
+            flight_plan = Direction.list_directions()[start_dir].to_char()
             if int(gap1):
                 flight_plan += gap1
             next_dir = (start_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             if int(gap2):
                 flight_plan += gap2
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             if int(gap1):
                 flight_plan += gap1
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:
@@ -272,9 +272,9 @@ def simple_agent(board):
                 gap1 = str(randint(3, 9))
                 gap2 = str(randint(3, 9))
                 start_dir = randint(0, 3)
-                flight_plan = Direction.moves()[start_dir].to_char() + gap1
+                flight_plan = Direction.list_directions()[start_dir].to_char() + gap1
                 next_dir = (start_dir + 1) % 4
-                flight_plan += Direction.moves()[next_dir].to_char() + gap2
+                flight_plan += Direction.list_directions()[next_dir].to_char() + gap2
                 next_dir = (next_dir + 1) % 4
                 flight_plan += "C"
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(max(convert_cost + 10, int(shipyard.ship_count/2)), flight_plan)
@@ -287,13 +287,13 @@ def simple_agent(board):
             gap1 = str(randint(3, 9))
             gap2 = str(randint(3, 9))
             start_dir = randint(0, 3)
-            flight_plan = Direction.moves()[start_dir].to_char() + gap1
+            flight_plan = Direction.list_directions()[start_dir].to_char() + gap1
             next_dir = (start_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char() + gap2
+            flight_plan += Direction.list_directions()[next_dir].to_char() + gap2
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char() + gap1
+            flight_plan += Direction.list_directions()[next_dir].to_char() + gap1
             next_dir = (next_dir + 1) % 4
-            flight_plan += Direction.moves()[next_dir].to_char()
+            flight_plan += Direction.list_directions()[next_dir].to_char()
             shipyard.next_action = ShipyardAction.launch_ships_in_direction(21, flight_plan)
         # else spawn if possible
         elif remaining_halite > board.configuration.spawn_cost * shipyard.max_spawn:

@@ -836,7 +836,7 @@ class Board:
         # apply fleet to fleet damage on all orthagonally adjacent cells
         incoming_dmg = DefaultDict(int)
         for fleet in board.fleets.values():
-            for direction in Direction.moves():
+            for direction in Direction.list_directions():
                 curr_pos = fleet.position.translate(direction.to_point(), board.configuration.size)
                 fleet_at_pos = board.get_fleet_at_point(curr_pos)
                 if fleet_at_pos and not fleet_at_pos.player_id == fleet.player_id:
