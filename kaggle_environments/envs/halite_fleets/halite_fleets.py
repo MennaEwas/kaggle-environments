@@ -18,9 +18,9 @@ import math
 import numpy as np
 from os import path
 from random import choice, randint, randrange, sample, seed, random
-from .helpers import board_agent, Board, ShipyardAction, Direction
+from .helpers import board_agent, Board, ShipyardAction
 from kaggle_environments import utils
-from kaggle_environments.helpers import Point
+from kaggle_environments.helpers import Point, Direction
 
 
 def get_col_row(size, pos):
