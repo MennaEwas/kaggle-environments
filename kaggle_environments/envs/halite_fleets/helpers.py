@@ -275,7 +275,7 @@ class Fleet:
     @property
     def collection_rate(self) -> float:
         """ln(ship_count) / 10"""
-        return min(math.log(self.ship_count) / 10, .99)
+        return min(math.log(self.ship_count) / 20, .99)
 
     @staticmethod
     def max_flight_plan_len_for_ship_count(ship_count) -> int:

@@ -46,7 +46,7 @@ def check_path(board, start, dirs, dist_a, dist_b, collection_rate):
     for idx, d in enumerate(dirs):
         for _ in range((dist_a if idx % 2 == 0 else dist_b) + 1):
             current = current.translate(d.to_point(), board.configuration.size)
-            halite += (board.cells.get(current).halite or 0) * collection_rate
+            halite += int((board.cells.get(current).halite or 0) * collection_rate)
     return math.pow(npv, steps) * halite / (2 * (dist_a + dist_b + 2))
 
 def check_location(board, loc, me):
@@ -159,7 +159,7 @@ def simp_agent(board):
         closest_enemy_shipyard = get_closest_enemy_shipyard(board, shipyard.position, me)
         invading_fleet_size = 100
         dist_to_closest_enemy_shipyard = 100 if not closest_enemy_shipyard else shipyard.position.distance_to(closest_enemy_shipyard.position, size)
-        if closest_enemy_shipyard and (closest_enemy_shipyard.ship_count < 20 or dist_to_closest_enemy_shipyard < 10) and (remaining_halite >= spawn_cost or shipyard.ship_count >= invading_fleet_size):
+        if closest_enemy_shipyard and (closest_enemy_shipyard.ship_count < 20 or dist_to_closest_enemy_shipyard < 15) and (remaining_halite >= spawn_cost or shipyard.ship_count >= invading_fleet_size):
             if shipyard.ship_count >= invading_fleet_size:
                 flight_plan = get_shortest_flight_path_between(shipyard.position, closest_enemy_shipyard.position, size)
                 shipyard.next_action = ShipyardAction.launch_ships_in_direction(invading_fleet_size, flight_plan)
