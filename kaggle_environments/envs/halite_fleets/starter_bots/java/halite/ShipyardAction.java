@@ -19,13 +19,13 @@ public class ShipyardAction {
         if (raw.length() == 0) {
             throw new IllegalStateException("invalid raw shipyard empty string");
         }
-        int numShips = Integer.parseInt(raw.split("_")[1])
+        int numShips = Integer.parseInt(raw.split("_")[1]);
         if (raw.startsWith(LAUNCH)) {
             return ShipyardAction.spawnShips(numShips);
         }
         if (raw.startsWith(SPAWN)) {
             String flightPlan = raw.split("_")[2];
-            return ShipyardAction.launchFleetWithFlightPlan(numShips, flightPlan)
+            return ShipyardAction.launchFleetWithFlightPlan(numShips, flightPlan);
         }
         throw new IllegalStateException("invalid Shipyard Action raw " + raw);
     }
