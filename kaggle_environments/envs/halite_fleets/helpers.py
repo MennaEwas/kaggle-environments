@@ -686,6 +686,10 @@ class Board:
             uid_counter += 1
             return f"{self.step + 1}-{uid_counter}"
 
+        # this checks the validity of a flight plan
+        def is_valid_flight_plan(flight_plan):
+            return len([c for c in flight_plan if c not in "NESWC0123456789"]) == 0
+
         # Process actions and store the results in the fleets and shipyards lists for collision checking
         for player in board.players.values():
             for shipyard in player.shipyards:
@@ -700,8 +704,10 @@ class Board:
                     player._halite -= spawn_cost * shipyard.next_action.num_ships
                     shipyard._ship_count += shipyard.next_action.num_ships
                 elif shipyard.next_action.action_type == ShipyardActionType.LAUNCH and shipyard.ship_count >= shipyard.next_action.num_ships:
-                    shipyard._ship_count -= shipyard.next_action.num_ships
                     flight_plan = shipyard.next_action.flight_plan
+                    if not flight_plan or not is_valid_flight_plan(flight_plan):
+                        continue
+                    shipyard._ship_count -= shipyard.next_action.num_ships
                     direction = Direction.from_char(flight_plan[0])
                     max_flight_plan_len = Fleet.max_flight_plan_len_for_ship_count(shipyard.next_action.num_ships)
                     if len(flight_plan) > max_flight_plan_len:
