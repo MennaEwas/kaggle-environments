@@ -102,7 +102,7 @@ class ShipyardAction:
 
     def __init__(self, type: ShipyardActionType, num_ships: Optional[int], flight_plan: Optional[str]) -> None:
         self._type = type
-        assert num_ships > 0, "must be a positive number"
+        assert num_ships >= 0, "must be a non-negative number"
         assert num_ships == int(num_ships), "must be an integer"
         self._num_ships = num_ships
         self._flight_plan = flight_plan
@@ -690,6 +690,8 @@ class Board:
         for player in board.players.values():
             for shipyard in player.shipyards:
                 if shipyard.next_action == None:
+                    pass
+                elif shipyard.ship_count == 0:
                     pass
                 elif (shipyard.next_action.action_type == ShipyardActionType.SPAWN 
                         and player.halite >= spawn_cost * shipyard.next_action.num_ships 
