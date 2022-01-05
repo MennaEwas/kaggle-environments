@@ -10,7 +10,7 @@ public class Player {
     public final String[] fleetIds;
     public final Board board;
     
-    public Player(String playerId, int halite, String[] shipyardIds, Stirng[] fleetIds, Board board) {
+    public Player(String playerId, int halite, String[] shipyardIds, String[] fleetIds, Board board) {
         this.id = playerId;
         this.halite = halite;
         this.shipyardIds = shipyardIds;
@@ -57,6 +57,6 @@ public class Player {
         Arrays.stream(this.shipyards()).forEach(shipyard -> shipyards.put(shipyard.id, shipyard.observation()));
         HashMap<String, String[]> fleets = new HashMap<>();
         Arrays.stream(this.fleets()).forEach(fleet -> fleets.put(fleet.id, fleet.observation()));
-        return new Object[]{self.halite, shipyards, fleets};
+        return new Object[]{this.halite, shipyards, fleets};
     }
 }
