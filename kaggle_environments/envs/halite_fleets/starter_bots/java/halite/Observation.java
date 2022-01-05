@@ -11,7 +11,7 @@ public class Observation {
     public final ArrayList<HashMap<String, String[]>> playerFleets;
     public final int player;
     public final int step;
-    public final int remainingOverageTime;
+    public final float remainingOverageTime;
 
     private static String shortenFrontAndBack(String target, int n) {
         return target.substring(n, target.length() - n);
@@ -19,38 +19,11 @@ public class Observation {
 
     public Observation(String rawObservation) {
         // avoid importing json library? worth it?
-        String haliteStr = "'hatlite': [";
-        int haliteIdx = rawObservation.indexOf(haliteStr);
-        int haliteEndIdx = rawObservation.substring(haliteIdx).indexOf("]");
-        String haliteArray = rawObservation.substring(haliteIdx + haliteStr.length(), haliteEndIdx - 1);
-        String[] parts = haliteArray.split(", ");
-        Float[] haliteFlt = Arrays.stream(parts).map(str -> Float.parseFloat(str)).toArray(Float[]::new);
-        halite =  new float[haliteFlt.length];
-        for (var i = 0; i < halite.length; i++) {
-            halite[i] = (float)haliteFlt[i];
-        }
-
-        String playerStr = "'player': ";
-        int playerIdx = rawObservation.indexOf(playerStr);
-        String playerId = rawObservation.substring(playerIdx + playerStr.length(), playerIdx + playerStr.length() + 1);
-        this.player = Integer.parseInt(playerId);
-
-        String stepStr = "'step': ";
-        int stepIdx = rawObservation.indexOf(playerStr);
-        int stepEndIdx = rawObservation.substring(stepIdx).indexOf(",");
-        String step = rawObservation.substring(stepIdx + stepStr.length(), stepEndIdx);
-        this.step = Integer.parseInt(step);
-
-        String remainingOverTimeStr = "'remainingOverageTime': ";
-        int remainingOverageTimeIdx = rawObservation.indexOf(remainingOverTimeStr);
-        int remainingOverageTimeEndIdx = rawObservation.substring(remainingOverageTimeIdx).indexOf("}");
-        String remainingOverageTime = rawObservation.substring(remainingOverageTimeIdx + remainingOverTimeStr.length(), remainingOverageTimeEndIdx);
-        this.remainingOverageTime = Integer.parseInt(remainingOverageTime);
-        
-        int playersStart = rawObservation.indexOf("[[");
-        int playersEnd = rawObservation.indexOf("]]");
-        String players = rawObservation.substring(playersStart + 1, playersEnd + 1);
-        String[] playerParts = players.split(", ");
+        this.halite = HaliteJson.getFloatArrFromJson(rawObservation, "halite");
+        this.player = HaliteJson.getIntFromJson(rawObservation, "player");
+        this.step = HaliteJson.getIntFromJson(rawObservation, "step");
+        this.remainingOverageTime = HaliteJson.getFloatFromJson(rawObservation, "remainingOverageTime");
+        String[] playerParts = HaliteJson.getStrArrFromJson(rawObservation, "player");
         playerHlt = new int[playerParts.length];
         playerShipyards = new ArrayList<HashMap<String, int[]>>();
         playerFleets = new ArrayList<HashMap<String, String[]>>();
