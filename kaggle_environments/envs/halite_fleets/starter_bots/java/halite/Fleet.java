@@ -7,11 +7,11 @@ public class Fleet {
     public final Direction direction;
     public final Point position;
     public final String flightPlan;
-    public final int halite;
+    public final float halite;
     public final int playerId;
     public final Board board;
     
-    public Fleet(String fleetId, int shipCount, Direction direction, Point position, int halite, String flightPlan, int playerId, Board board) {
+    public Fleet(String fleetId, int shipCount, Direction direction, Point position, float halite, String flightPlan, int playerId, Board board) {
         this.id = fleetId;
         this.shipCount = shipCount;
         this.direction = direction;
@@ -20,6 +20,10 @@ public class Fleet {
         this.halite = halite;
         this.playerId = playerId;
         this.board = board;
+    }
+
+    public Fleet cloneToBoard(Board board) {
+        return new Fleet(this.id, this.shipCount, this.direction, this.position, this.halite, this.flightPlan, this.playerId, board);
     }
 
     public Cell cell() {

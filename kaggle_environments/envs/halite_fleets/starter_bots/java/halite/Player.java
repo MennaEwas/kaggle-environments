@@ -1,16 +1,18 @@
 package halite;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class Player {
-    public final String id; 
+    public final int id; 
     public final int halite; 
-    public final String[] shipyardIds; 
-    public final String[] fleetIds;
+    public final ArrayList<String> shipyardIds; 
+    public final ArrayList<String> fleetIds;
     public final Board board;
     
-    public Player(String playerId, int halite, String[] shipyardIds, String[] fleetIds, Board board) {
+    public Player(int playerId, int halite, ArrayList<String> shipyardIds, ArrayList<String> fleetIds, Board board) {
         this.id = playerId;
         this.halite = halite;
         this.shipyardIds = shipyardIds;
@@ -18,19 +20,23 @@ public class Player {
         this.board = board;
     }
 
+    public Player cloneToBoard(Board board) {
+        return new Player(this.id, this.halite, new ArrayList<String>(this.shipyardIds.stream().collect(Collectors.toList())), new ArrayList<String>(this.fleetIds.stream().collect(Collectors.toList())), board);
+    }
+
     /**
      * Returns all shipyards owned by this player.
      * @return
      */
     public Shipyard[] shipyards() {
-        return (Shipyard[])this.board.shipyards.values().stream().filter(shipyard -> Arrays.stream(this.shipyardIds).anyMatch(sId -> sId == shipyard.id)).toArray();
+        return (Shipyard[])this.board.shipyards.values().stream().filter(shipyard -> this.shipyardIds.stream().anyMatch(sId -> sId == shipyard.id)).toArray();
     }
 
     /**
      * Returns all fleets owned by this player.
      */
     public Fleet[] fleets() {
-        return (Fleet[])this.board.fleets.values().stream().filter(fleet -> Arrays.stream(this.fleetIds).anyMatch(fId -> fId == fleet.id)).toArray();
+        return (Fleet[])this.board.fleets.values().stream().filter(fleet -> this.fleetIds.stream().anyMatch(fId -> fId == fleet.id)).toArray();
     }
 
     /**

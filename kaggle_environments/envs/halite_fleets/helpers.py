@@ -478,8 +478,6 @@ class Board:
             player_actions = next_actions[player_id] or {}
 
             for (fleet_id, [fleet_index, fleet_halite, ship_count, direction, flight_plan]) in player_fleets.items():
-                # In the raw observation, halite is stored as a 1d list but we convert it to a 2d dict for convenience
-                # Accordingly we also need to convert our list indices to dict keys / 2d positions
                 fleet_position = Point.from_index(fleet_index, size)
                 fleet_direction = Direction.from_index(direction)
                 self._add_fleet(Fleet(fleet_id, ship_count, fleet_direction, fleet_position, fleet_halite, flight_plan, player_id, self))

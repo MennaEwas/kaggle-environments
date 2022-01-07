@@ -52,4 +52,8 @@ public class HaliteJson {
         }
         return floatArr;
     }
+    
+    public static boolean containsKey(String raw, String key) {
+        return raw.indexOf(key) > -1;
+    }
 }

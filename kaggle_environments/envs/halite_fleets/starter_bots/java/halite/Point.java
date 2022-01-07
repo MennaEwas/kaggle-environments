@@ -39,8 +39,8 @@ public class Point {
         return (size - this.y - 1) * size + this.x;
     }
 
-    public Point fromIndex(int index, int size) {
-        return new Point(index % size, size - y - 1);
+    public static Point fromIndex(int index, int size) {
+        return new Point(index % size, size - index - 1);
     }
 
     public Point abs() {

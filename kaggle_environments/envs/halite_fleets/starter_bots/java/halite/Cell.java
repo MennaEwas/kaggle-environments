@@ -5,12 +5,12 @@ import java.util.Optional;
 public class Cell {
 
     public final Point position;
-    public final int halite;
-    public final String shipyardId;
-    public final String fleetId;
+    public float halite;
+    public String shipyardId;
+    public String fleetId;
     public final Board board;
     
-    public Cell(Point position, int halite, String shipyardId, String fleetId, Board board) {
+    public Cell(Point position, float halite, String shipyardId, String fleetId, Board board) {
         this.position = position;
         this.halite = halite;
         this.shipyardId = shipyardId;
@@ -18,6 +18,9 @@ public class Cell {
         this.board = board;
     }
 
+    public Cell cloneToBoard(Board board) {
+        return new Cell(this.position, this.halite, this.shipyardId, this.fleetId, board);
+    }
 
     public Optional<Fleet> fleet() {
         if (this.board.fleets.containsKey(this.fleetId)) {
@@ -35,7 +38,7 @@ public class Cell {
     }
 
     public Cell neighbor(Point offset) {
-        Point next = this.position.translate(offset, this.board.size());
+        Point next = this.position.translate(offset, this.board.size);
         return this.board.getCellAtPosition(next);
     }
 

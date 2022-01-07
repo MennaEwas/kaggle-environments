@@ -33,6 +33,10 @@ public class Shipyard {
         }
     }
 
+    public Shipyard cloneToBoard(Board board) {
+        return new Shipyard(this.id, this.shipCount, this.position, this.playerId, this.turnsControlled, board, this.nextAction);
+    }
+
     public int maxSpawn() {
         for (int i = 0; i < this.SPAWN_VALUES.length; i++) {
             if (this.turnsControlled < this.SPAWN_VALUES[i]) {
