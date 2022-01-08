@@ -184,12 +184,14 @@ public class Board {
 
     private boolean isValidFlightPlan(String flightPlan) {
         String allowed = "NESWC0123456789";
-        // TODO FIX
+        int matches = 0;
         for (int i = 0; i < allowed.length(); i++) {
-            char c = allowed.charAt(i);
-            flightPlan = flightPlan.replace(c, '');
+            String c = allowed.substring(i, i +1);
+            if (allowed.contains(c)) {
+                matches += 1;
+            }
         }
-        return flightPlan.length() == 0;
+        return matches == flightPlan.length();
     }
 
     private int findFirstNonDigit(String candidateStr) {
@@ -290,7 +292,7 @@ public class Board {
                     if (flightPlan.length() > maxFlightPlanLen) {
                         flightPlan = flightPlan.substring(0, maxFlightPlanLen);
                     }
-                    board.addFleet(Fleet(this.createUid(), nextAction.shipCount, direction, shipyard.position, 0, nextAction.flightPlan, player.id, board))
+                    board.addFleet(Fleet(this.createUid(), nextAction.shipCount, direction, shipyard.position, 0, nextAction.flightPlan, player.id, board));
                     uidCounter += 1;
                 }
                 
