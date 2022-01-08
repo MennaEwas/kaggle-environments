@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Map.Entry;
 
 public class Board {
@@ -15,7 +14,7 @@ public class Board {
     public final Player[] players;
     public final int currentPlayerId;
     public final Configuration configuration;
-    public final int step;
+    public int step;
     public final float remainingOverageTime;
     public final Cell[] cells;
     public final int size;
@@ -292,7 +291,7 @@ public class Board {
                     if (flightPlan.length() > maxFlightPlanLen) {
                         flightPlan = flightPlan.substring(0, maxFlightPlanLen);
                     }
-                    board.addFleet(Fleet(this.createUid(), nextAction.shipCount, direction, shipyard.position, 0, nextAction.flightPlan, player.id, board));
+                    board.addFleet(new Fleet(this.createUid(), nextAction.shipCount, direction, shipyard.position, 0, nextAction.flightPlan, player.id, board));
                     uidCounter += 1;
                 }
                 
@@ -301,7 +300,7 @@ public class Board {
             }
 
             
-            for (Fleet fleet : player.fleets) {
+            for (Fleet fleet : player.fleets()) {
                 // remove any errant 0s
                 while (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("0") ) {
                     fleet.flightPlan = fleet.flightPlan.substring(1);
@@ -309,7 +308,7 @@ public class Board {
                 if (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("C") && fleet.shipCount >= converstCost && fleet.cell().shipyardId.length() == 0) {
                     player.halite += fleet.halite;
                     fleet.cell().halite = 0;
-                    board.addShipyard(Shipyard(this.createUid(), fleet.shipCount - converstCost, fleet.position, player.id, 0, board));
+                    board.addShipyard(new Shipyard(this.createUid(), fleet.shipCount - converstCost, fleet.position, player.id, 0, board, Optional.empty()));
                     board.deleteFleet(fleet);
                     continue;
                 } else if (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("C")) {
@@ -364,7 +363,7 @@ public class Board {
         HashMap<Integer, List<Fleet>> fleetCollisionGroups = new HashMap<Integer, List<Fleet>>();
         // group_by(board.fleets.values(), lambda fleet: fleet.position)
         for (Entry<Integer, List<Fleet>> entry : fleetCollisionGroups.entrySet()) {
-            Position position = entry.getKey();
+            Point position = Point.fromIndex(entry.getKey(), configuration.size);
             List<Fleet> collidedFleets = entry.getValue();
             Pair<Optional<Fleet>, Fleet[]> pair = this.resolveCollision(collidedFleets);
             Optional<Fleet> winnerOptional = pair.first;
@@ -373,18 +372,18 @@ public class Board {
             if (winnerOptional.isPresent()) {
                 Fleet winner = winnerOptional.get();
                 winner.cell().fleetId = winner.id;
-                int maxEnemySize = deleted.length > 0 ? Arrays.stream(deleted).map(f -> f.shipCount).max().get() : 0;
-                winner._shipCount -= maxEnemySize;
+                int maxEnemySize = deleted.length > 0 ? Arrays.stream(deleted).map(f -> f.shipCount).max((a, b) -> a > b ? 1: -1).get() : 0;
+                winner.shipCount -= maxEnemySize;
             }
             for (Fleet fleet : deleted) {
                 board.deleteFleet(fleet);
                 if (winnerOptional.isPresent()) {
                     // Winner takes deleted fleets' halite
                     winnerOptional.get().halite += fleet.halite;
-                } else if (winnerOptional.empty() && shipyardOpt.isPresent() && shipyardOpt.get().player) {
+                } else if (winnerOptional.isEmpty() && shipyardOpt.isPresent()) {
                     // Desposit the halite into the shipyard
-                    player.halite += fleet.halite;
-                } else if  (winner.empty()) {
+                    shipyardOpt.get().player().halite += fleet.halite;
+                } else if  (winnerOptional.isEmpty()) {
                     // Desposit the halite on the square
                     board.getCellAtPosition(position).halite += fleet.halite;
                 }
@@ -394,14 +393,14 @@ public class Board {
 
         // Check for fleet to shipyard collisions
         for (Shipyard shipyard : board.shipyards.values()) {
-            Optional<Fleet> optFleet = shipyard.cell().fleet;
+            Optional<Fleet> optFleet = shipyard.cell().fleet();
             if (!optFleet.isEmpty() && optFleet.get().playerId != shipyard.playerId) {
-                Fleet = optFleet.get();
+                Fleet fleet = optFleet.get();
                 if (fleet.shipCount > shipyard.shipCount) {
-                    count = fleet.shipCount - shipyard.shipCount;
+                    int count = fleet.shipCount - shipyard.shipCount;
                     board.deleteShipyard(shipyard);
-                    board.addShipyard(Shipyard(ShipyardId(this.createUid()), count, shipyard.position, fleet.player.id, 1, board));
-                    fleet.player.halite += fleet.halite;
+                    board.addShipyard(new Shipyard(this.createUid(), count, shipyard.position, fleet.player().id, 1, board, Optional.empty()));
+                    fleet.player().halite += fleet.halite;
                     board.deleteFleet(fleet);
                 } else {
                     shipyard.shipCount -= fleet.shipCount;
@@ -413,8 +412,8 @@ public class Board {
 
         // Deposit halite from fleets into shipyards
         for (Shipyard shipyard : board.shipyards.values()) {
-            Optional<Fleet> optFleet = shipyard.cell().fleet;
-            if (!optFleet.empty() && optFleet.get().player_id == shipyard.player_id) {
+            Optional<Fleet> optFleet = shipyard.cell().fleet();
+            if (!optFleet.isEmpty() && optFleet.get().playerId == shipyard.playerId) {
                 Fleet fleet = optFleet.get();
                 shipyard.player().halite += fleet.halite;
                 shipyard.shipCount += fleet.shipCount;
@@ -423,10 +422,10 @@ public class Board {
         }
 
         // apply fleet to fleet damage on all orthagonally adjacent cells
-        HashMap<String, Integer> incomingDmg = new HashMap();
+        HashMap<String, Integer> incomingDmg = new HashMap<String, Integer>();
         for (Fleet fleet : board.fleets.values()) {
             incomingDmg.put(fleet.id, 0);
-            for (Direction direction : Direction.list_directions()) {
+            for (Direction direction : Direction.listDirections()) {
                 Point currPos = fleet.position.translate(direction, board.configuration.size);
                 Optional<Fleet> optFleet = board.getFleetAtPoint(currPos);
                 if (optFleet.isPresent() && optFleet.get().playerId != fleet.playerId) {
@@ -458,10 +457,10 @@ public class Board {
         }
 
         // Regenerate halite in cells
-        for (Cell cell : board.cells.values()) {
+        for (Cell cell : board.cells) {
             if (cell.fleetId.equals("") && cell.shipyardId.equals("")) {
-                if (cell.halite < configuration.max_cell_halite) {
-                    float nextHalite = Math.round(cell.halite * (1 + configuration.regenRate), 3);
+                if (cell.halite < configuration.maxCellHalite) {
+                    float nextHalite = (float) (Math.round(cell.halite * (1 + configuration.regenRate) * 1000.0) / 1000.0);
                     cell.halite = nextHalite;
                 }
             }

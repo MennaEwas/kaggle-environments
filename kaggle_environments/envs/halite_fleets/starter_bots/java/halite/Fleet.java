@@ -34,7 +34,7 @@ public class Fleet {
         return this.board.players[this.playerId];
     }
 
-    public double collection_rate() {
+    public double collectionRate() {
         return Math.min(Math.log(this.shipCount) / 10, .99);
     }
 

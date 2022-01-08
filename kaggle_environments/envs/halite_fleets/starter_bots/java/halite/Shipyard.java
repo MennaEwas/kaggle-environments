@@ -4,13 +4,13 @@ import java.util.Optional;
 
 public class Shipyard {
     public final String id; 
-    public final int shipCount; 
-    public final Point position; 
-    public final int playerId; 
-    public final int turnsControlled; 
+    public int shipCount; 
+    public Point position; 
+    public int playerId; 
+    public int turnsControlled; 
     public final Board board; 
     public Optional<ShipyardAction> nextAction;
-    public final int[] SPAWN_VALUES;
+    private final int[] SPAWN_VALUES;
     
     public Shipyard(String shipyardId, int shipCount, Point position, int playerId, int turnsControlled, Board board, Optional<ShipyardAction> nextAction) {
         this.id = shipyardId;

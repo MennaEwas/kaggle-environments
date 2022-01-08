@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class Player {
     public final int id; 
-    public final int halite; 
+    public int halite; 
     public final ArrayList<String> shipyardIds; 
     public final ArrayList<String> fleetIds;
     public final Board board;
