@@ -225,9 +225,9 @@ public class Board {
      */
     public Pair<Optional<Fleet>, Fleet[]> resolveCollision(List<Fleet> fleets) {
         if (fleets.size() == 1) {
-            return new Pair(Optional.of(fleets.get(0)), new Fleet[0]);
+            return new Pair<Optional<Fleet>, Fleet[]>(Optional.of(fleets.get(0)), new Fleet[0]);
         }
-        HashMap<Integer, List<Fleet>> fleetsByShips = new HashMap(); 
+        HashMap<Integer, List<Fleet>> fleetsByShips = new HashMap<Integer, List<Fleet>>(); 
         for (Fleet fleet : fleets) {
             int ships = fleet.shipCount;
             if (!fleetsByShips.containsKey(ships)) {
@@ -240,10 +240,10 @@ public class Board {
         if (largestFleets.size() == 1) {
             // There was a winner, return it
             Fleet winner = largestFleets.get(0);
-            return new Pair(Optional.of(winner), fleets.stream().filter(f -> !f.id.equals(winner.id)).toArray(Fleet[]::new));
+            return new Pair<Optional<Fleet>, Fleet[]>(Optional.of(winner), fleets.stream().filter(f -> !f.id.equals(winner.id)).toArray(Fleet[]::new));
         }
         // There was a tie for most ships, all are deleted
-        return new Pair(Optional.empty(), fleets);
+        return new Pair<Optional<Fleet>, Fleet[]>(Optional.empty(), fleets.stream().toArray(Fleet[]::new));
     }
 
 
@@ -336,7 +336,7 @@ public class Board {
                 // We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
             }
 
-            HashMap<Integer, List<Fleet>> fleetsByLoc = new HashMap();
+            HashMap<Integer, List<Fleet>> fleetsByLoc = new HashMap<Integer, List<Fleet>>();
             for (Fleet fleet : player.fleets()) {
                 Integer locIdx = fleet.position.toIndex(configuration.size);
                 if (!fleetsByLoc.containsKey(locIdx)) {
