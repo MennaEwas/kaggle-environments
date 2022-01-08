@@ -3,55 +3,55 @@ package halite;
 public class ShipyardAction {
     public static final String SPAWN = "SPAWN";
     public static final String LAUNCH = "LAUNCH";
-    public final String type;
-    public final int numShips;
+    public final String actionType;
+    public final int shipCount;
     public final String flightPlan;
 
-    public static ShipyardAction spawnShips(int numShips) {
-        return new ShipyardAction(SPAWN, numShips, "");
+    public static ShipyardAction spawnShips(int shipCount) {
+        return new ShipyardAction(SPAWN, shipCount, "");
     }
 
-    public static ShipyardAction launchFleetWithFlightPlan(int numShips, String flightPlan) {
-        return new ShipyardAction(LAUNCH, numShips, flightPlan);
+    public static ShipyardAction launchFleetWithFlightPlan(int shipCount, String flightPlan) {
+        return new ShipyardAction(LAUNCH, shipCount, flightPlan);
     }
 
     public static ShipyardAction fromString(String raw) {
         if (raw.length() == 0) {
             throw new IllegalStateException("invalid raw shipyard empty string");
         }
-        int numShips = Integer.parseInt(raw.split("_")[1]);
+        int shipCount = Integer.parseInt(raw.split("_")[1]);
         if (raw.startsWith(LAUNCH)) {
-            return ShipyardAction.spawnShips(numShips);
+            return ShipyardAction.spawnShips(shipCount);
         }
         if (raw.startsWith(SPAWN)) {
             String flightPlan = raw.split("_")[2];
-            return ShipyardAction.launchFleetWithFlightPlan(numShips, flightPlan);
+            return ShipyardAction.launchFleetWithFlightPlan(shipCount, flightPlan);
         }
         throw new IllegalStateException("invalid Shipyard Action raw " + raw);
     }
 
-    public ShipyardAction(String type, int numShips, String flightPlan) {
+    public ShipyardAction(String type, int shipCount, String flightPlan) {
         assert type.equals(SPAWN) || type.equals(LAUNCH) : "Type must be SPAWN or LAUNCH";
-        assert numShips > 0 : "numShips must be a non-negative number";
-        this.type = type;
-        this.numShips = numShips;
+        assert shipCount > 0 : "numShips must be a non-negative number";
+        this.actionType = type;
+        this.shipCount = shipCount;
         this.flightPlan = flightPlan;
     }
 
     private boolean isSpawn() {
-        return this.type.equals(SPAWN);
+        return this.actionType.equals(SPAWN);
     }
 
     private boolean isLaunch() {
-        return this.type.equals(LAUNCH);
+        return this.actionType.equals(LAUNCH);
     }
 
     public String toString() {
         if (this.isSpawn()) {
-            return String.format("%s_%d", SPAWN, this.numShips);
+            return String.format("%s_%d", SPAWN, this.shipCount);
         }
         if (this.isLaunch()) {
-            return String.format("%s_%d_%s", LAUNCH, this.numShips, this.flightPlan);
+            return String.format("%s_%d_%s", LAUNCH, this.shipCount, this.flightPlan);
         }
         throw new IllegalStateException("invalid Shpyard Action");
     }

@@ -3,6 +3,7 @@ package halite;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -46,7 +47,7 @@ public class Board {
      *  Each entity contains both key values (e.g. fleet.player_id) as well as entity references (e.g. fleet.player).
      *  References are deep and chainable e.g.
      *      [fleet.halite for player in board.players for fleet in player.fleets]
-     *      fleet.player.shipyards[0].cell.north.east.fleet
+     *      fleet.player.shipyards()[0].cell.north.east.fleet
      *  Consumers should not set or modify any attributes except and Shipyard.nextAction
      */
     public Board(
@@ -176,21 +177,22 @@ public class Board {
     }
 
     private String createUid() {
-        Sting uid = String.format("%d-%d", this.step + 1, this.uidCounter);
-        this.counter += 1;
+        String uid = String.format("%d-%d", this.step + 1, this.uidCounter);
+        this.uidCounter += 1;
         return uid;
     }
 
-    private boolean isValidFlightPlan(Stirng flightPlan) {
+    private boolean isValidFlightPlan(String flightPlan) {
         String allowed = "NESWC0123456789";
+        // TODO FIX
         for (int i = 0; i < allowed.length(); i++) {
-            Char c = allowed.charAt(i)
-            flightPlan = flightPlan.replace(c, "");
+            char c = allowed.charAt(i);
+            flightPlan = flightPlan.replace(c, '');
         }
         return flightPlan.length() == 0;
     }
 
-    private findFirstNonDigit(String candidateStr) {
+    private int findFirstNonDigit(String candidateStr) {
         if (candidateStr.length() == 0) return 0;
         for (int i = 0; i < candidateStr.length(); i++) {
             if (!Character.isDigit(candidateStr.charAt(i))) {
@@ -207,9 +209,9 @@ public class Board {
             Fleet temp = f1;
             f1 = f2;
             f2 = temp;
-            String temp = fid1;
+            String tempS = fid1;
             fid1 = fid2;
-            fid2 = temp;
+            fid2 = tempS;
         }
         f1.halite += f2.halite;
         f1.shipCount += f2.shipCount;
@@ -221,19 +223,27 @@ public class Board {
      * Accepts the list of fleets at a particular position (must not be empty).
      * Returns the fleet with the most ships or None in the case of a tie along with all other fleets.
      */
-    public resolve_collision(List<Fleet> fleets) {
-        if (fleets.length == 1) {
-            return fleets[0], []
+    public Pair<Optional<Fleet>, Fleet[]> resolveCollision(List<Fleet> fleets) {
+        if (fleets.size() == 1) {
+            return new Pair(Optional.of(fleets.get(0)), new Fleet[0]);
         }
-        fleets_by_ships = group_by(fleets, lambda fleet: fleet.shipCount)
-        most_ships = max(fleets_by_ships.keys())
-        largest_fleets = fleets_by_ships[most_ships]
-        if len(largest_fleets) == 1:
+        HashMap<Integer, List<Fleet>> fleetsByShips = new HashMap(); 
+        for (Fleet fleet : fleets) {
+            int ships = fleet.shipCount;
+            if (!fleetsByShips.containsKey(ships)) {
+                fleetsByShips.put(ships, new ArrayList<Fleet>());
+            }
+            fleetsByShips.get(ships).add(fleet);
+        }
+        Integer mostShips = fleetsByShips.keySet().stream().max((a, b) -> a > b ? 1 : 0).get();
+        List<Fleet> largestFleets = fleetsByShips.get(mostShips);
+        if (largestFleets.size() == 1) {
             // There was a winner, return it
-            winner = largest_fleets[0]
-            return winner, [fleet for fleet in fleets if fleet != winner]
+            Fleet winner = largestFleets.get(0);
+            return new Pair(Optional.of(winner), fleets.stream().filter(f -> !f.id.equals(winner.id)).toArray(Fleet[]::new));
+        }
         // There was a tie for most ships, all are deleted
-        return None, fleets
+        return new Pair(Optional.empty(), fleets);
     }
 
 
@@ -254,35 +264,33 @@ public class Board {
 
         // Process actions and store the results in the fleets and shipyards lists for collision checking
         for (Player player : board.players) {
-            for (Shipyard shipyard : player.shipyards) {
+            for (Shipyard shipyard : player.shipyards()) {
                 if (shipyard.nextAction.isEmpty()) {
                     continue;
                 }
                 ShipyardAction nextAction = shipyard.nextAction.get();
 
-                if  (shipyard.nextAction.shipCount == 0) {
+                if  (nextAction.shipCount == 0) {
                     shipyard.nextAction = Optional.empty();
                     continue;
                 }
 
-                if (nextAction.actionType == ShipyardActionType.SPAWN 
-                        && player.halite >= spawnCost * shipyard.nextAction.numShips 
-                        && shipyard.nextAction.numShips <= shipyard.maxSpawn()) {}
-                    player.halite -= spawnCost * shipyard.nextAction.numShips
-                    shipyard.shipCount += shipyard.nextAction.numShips
-                } else if (shipyard.nextAction.actionType == ShipyardActionType.LAUNCH and shipyard.shipCount >= shipyard.nextAction.numShips) {
-                    String flightPlan = shipyard.nextAction.flightPlan;
-                    if (!flightPlan or !isValidFlightPlan(flight_plan)) {
+                if (nextAction.actionType.equals(ShipyardAction.SPAWN) && player.halite >= spawnCost * nextAction.shipCount && nextAction.shipCount <= shipyard.maxSpawn()) {
+                    player.halite -= spawnCost * nextAction.shipCount;
+                    shipyard.shipCount += nextAction.shipCount;
+                } else if (nextAction.actionType.equals(ShipyardAction.LAUNCH) && shipyard.shipCount >= nextAction.shipCount) {
+                    String flightPlan = nextAction.flightPlan;
+                    if (flightPlan.length() == 0 || !isValidFlightPlan(flightPlan)) {
                         shipyard.nextAction = Optional.empty();
                         continue;
                     }
-                    shipyard.shipCount -= shipyard.nextAction.numShips;
-                    Direction direction = Direction.fromChar(flightPlan.substring(0, 1));
-                    int maxFlightPlanLen = Fleet.maxFlightPlanLenForShipCount(shipyard.nextAction.numShips);
+                    shipyard.shipCount -= nextAction.shipCount;
+                    Direction direction = Direction.fromChar(flightPlan.charAt(0));
+                    int maxFlightPlanLen = Fleet.maxFlightPlanLenForShipCount(nextAction.shipCount);
                     if (flightPlan.length() > maxFlightPlanLen) {
-                        flightPlan = flightPlan.substring(0, maxFlightPlanLen;
+                        flightPlan = flightPlan.substring(0, maxFlightPlanLen);
                     }
-                    board.addFleet(Fleet(FleetId(this.createUid()), shipyard.nextAction.numShips, direction, shipyard.position, 0, shipyard.nextAction.flightPlan, player.id, board))
+                    board.addFleet(Fleet(this.createUid(), nextAction.shipCount, direction, shipyard.position, 0, nextAction.flightPlan, player.id, board))
                     uidCounter += 1;
                 }
                 
@@ -293,13 +301,13 @@ public class Board {
             
             for (Fleet fleet : player.fleets) {
                 // remove any errant 0s
-                while (fleet.flightPlan.length() > 0 && fleet.flightPlan.startswith("0") ) {
+                while (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("0") ) {
                     fleet.flightPlan = fleet.flightPlan.substring(1);
                 }
-                if (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("C") && fleet.shipCount >= converstCost && fleet.cell.shipyardId.length() == 0) {
+                if (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("C") && fleet.shipCount >= converstCost && fleet.cell().shipyardId.length() == 0) {
                     player.halite += fleet.halite;
                     fleet.cell().halite = 0;
-                    board.addShipyard(Shipyard(ShipyardId(create_uid()), fleet.shipCount - converstCost, fleet.position, player.id, 0, board));
+                    board.addShipyard(Shipyard(this.createUid(), fleet.shipCount - converstCost, fleet.position, player.id, 0, board));
                     board.deleteFleet(fleet);
                     continue;
                 } else if (fleet.flightPlan.length() > 0 && fleet.flightPlan.startsWith("C")) {
@@ -307,57 +315,79 @@ public class Board {
                     fleet.flightPlan = fleet.flightPlan.substring(1);
                 }
 
-                if (fleet.flightPlan.length() > 0 && fleet.flight_plan[0].isalpha()) {
-                    fleet.direction = Direction.fromChar(fleet.flightPlan.substring(0, 1));
+                if (fleet.flightPlan.length() > 0 && Character.isLetter(fleet.flightPlan.charAt(0))) {
+                    fleet.direction = Direction.fromChar(fleet.flightPlan.charAt(0));
                     fleet.flightPlan = fleet.flightPlan.substring(1);
                 } else if (fleet.flightPlan.length() > 0) {
-                    idx = find_first_non_digit(fleet.flightPlan)
-                    digits = int(fleet.flightPlan[:idx])
-                    rest = fleet.flightPlan[idx:]
-                    digits -= 1
-                    if digits > 0:
-                        fleet._flightPlan = str(digits) + rest
-                    else:
-                        fleet._flightPlan = rest
+                    int idx = this.findFirstNonDigit(fleet.flightPlan);
+                    int digits = Integer.parseInt(fleet.flightPlan.substring(0, idx));
+                    String rest = fleet.flightPlan.substring(idx);
+                    digits -= 1;
+                    if (digits > 0) {
+                        fleet.flightPlan = String.valueOf(digits) + rest;
+                    } else {
+                        fleet.flightPlan = rest;
+                    }
                 }
 
                 // continue moving in the fleet's direction
                 fleet.cell().fleetId = "";
-                fleet.position = fleet.position.translate(fleet.direction.toPoint(), configuration.size);
+                fleet.position = fleet.position.translate(fleet.direction, configuration.size);
                 // We don't set the new cell's fleet_id here as it would be overwritten by another fleet in the case of collision.
             }
 
-            fleets_by_loc = group_by(player.fleets, lambda fleet: fleet.position.to_index(configuration.size))
-            for value in fleets_by_loc.values():
-                fid = value[0].id
-                for i in range (1, len(value)):
-                    fid = combine_fleets(fid, value[i].id)
+            HashMap<Integer, List<Fleet>> fleetsByLoc = new HashMap();
+            for (Fleet fleet : player.fleets()) {
+                Integer locIdx = fleet.position.toIndex(configuration.size);
+                if (!fleetsByLoc.containsKey(locIdx)) {
+                    fleetsByLoc.put(locIdx, new ArrayList<Fleet>());
+                }
+                fleetsByLoc.get(locIdx).add(fleet);
+            }
 
-            # Lets just check and make sure.
-            assert player.halite >= 0
+            for (List<Fleet> fleets : fleetsByLoc.values()) {
+                String fid = fleets.get(0).id;
+                for (int i = 0; i < fleets.size(); i++) {
+                    fid = this.combineFleets(board, fid, fleets.get(0).id);
+                }
+
+            }
+
+            // Lets just check and make sure.
+            assert player.halite >= 0 : "Player should have non-negative halite";
         }
 
         
         // Check for fleet to fleet collisions
-        fleet_collision_groups = group_by(board.fleets.values(), lambda fleet: fleet.position)
-        for position, collided_fleets in fleet_collision_groups.items():
-            winner, deleted = resolve_collision(collided_fleets)
-            shipyard = group_by(board.shipyards.values(), lambda shipyard: shipyard.position).get(position)
-            if winner is not None:
-                winner.cell._fleet_id = winner.id
-                max_enemy_size = max([fleet.shipCount for fleet in deleted]) if deleted else 0
-                winner._shipCount -= max_enemy_size
-            for fleet in deleted:
-                board.deleteFleet(fleet)
-                if winner is not None:
+        HashMap<Integer, List<Fleet>> fleetCollisionGroups = new HashMap<Integer, List<Fleet>>();
+        // group_by(board.fleets.values(), lambda fleet: fleet.position)
+        for (Entry<Integer, List<Fleet>> entry : fleetCollisionGroups.entrySet()) {
+            Position position = entry.getKey();
+            List<Fleet> collidedFleets = entry.getValue();
+            Pair<Optional<Fleet>, Fleet[]> pair = this.resolveCollision(collidedFleets);
+            Optional<Fleet> winnerOptional = pair.first;
+            Fleet[] deleted = pair.second;
+            Optional<Shipyard> shipyardOpt = board.getShipyardAtPoint(position);
+            if (winnerOptional.isPresent()) {
+                Fleet winner = winnerOptional.get();
+                winner.cell().fleetId = winner.id;
+                int maxEnemySize = deleted.length > 0 ? Arrays.stream(deleted).map(f -> f.shipCount).max().get() : 0;
+                winner._shipCount -= maxEnemySize;
+            }
+            for (Fleet fleet : deleted) {
+                board.deleteFleet(fleet);
+                if (winnerOptional.isPresent()) {
                     // Winner takes deleted fleets' halite
-                    winner._halite += fleet.halite
-                elif winner is None and shipyard and shipyard[0].player:
+                    winnerOptional.get().halite += fleet.halite;
+                } else if (winnerOptional.empty() && shipyardOpt.isPresent() && shipyardOpt.get().player) {
                     // Desposit the halite into the shipyard
-                    player._halite += fleet.halite
-                elif winner is None:
+                    player.halite += fleet.halite;
+                } else if  (winner.empty()) {
                     // Desposit the halite on the square
-                    board.cells[position]._halite += fleet.halite
+                    board.getCellAtPosition(position).halite += fleet.halite;
+                }
+            }
+        }
 
 
         // Check for fleet to shipyard collisions
@@ -368,7 +398,7 @@ public class Board {
                 if (fleet.shipCount > shipyard.shipCount) {
                     count = fleet.shipCount - shipyard.shipCount;
                     board.deleteShipyard(shipyard);
-                    board.addShipyard(Shipyard(ShipyardId(create_uid()), count, shipyard.position, fleet.player.id, 1, board));
+                    board.addShipyard(Shipyard(ShipyardId(this.createUid()), count, shipyard.position, fleet.player.id, 1, board));
                     fleet.player.halite += fleet.halite;
                     board.deleteFleet(fleet);
                 } else {
@@ -391,43 +421,53 @@ public class Board {
         }
 
         // apply fleet to fleet damage on all orthagonally adjacent cells
-        incoming_dmg = DefaultDict(int)
-        for fleet in board.fleets.values():
-            for direction in Direction.list_directions():
-                curr_pos = fleet.position.translate(direction.to_point(), board.configuration.size)
-                fleet_at_pos = board.get_fleet_at_point(curr_pos)
-                if fleet_at_pos and not fleet_at_pos.player_id == fleet.player_id:
-                    incoming_dmg[fleet_at_pos.id] += fleet.shipCount
+        HashMap<String, Integer> incomingDmg = new HashMap();
+        for (Fleet fleet : board.fleets.values()) {
+            incomingDmg.put(fleet.id, 0);
+            for (Direction direction : Direction.list_directions()) {
+                Point currPos = fleet.position.translate(direction, board.configuration.size);
+                Optional<Fleet> optFleet = board.getFleetAtPoint(currPos);
+                if (optFleet.isPresent() && optFleet.get().playerId != fleet.playerId) {
+                    incomingDmg.put(fleet.id, incomingDmg.get(fleet.id) + optFleet.get().shipCount);
+                }
+            }
+        }
 
-        for fleet_id, damage in incoming_dmg.items():
-            fleet = board.fleets[fleet_id]
-            if damage >= fleet.shipCount:
-                fleet.cell._halite += fleet.halite
-                board.deleteFleet(fleet)
-            else:
-                fleet._shipCount -= damage
+        for (Entry<String, Integer> entry : incomingDmg.entrySet()) {
+            String fleetId = entry.getKey();
+            int damage = entry.getValue();
+            Fleet fleet = board.fleets.get(fleetId);
+            if (damage >= fleet.shipCount) {
+                fleet.cell().halite += fleet.halite;
+                board.deleteFleet(fleet);
+            } else {
+                fleet.shipCount -= damage;
+            }
+        }
 
-        # Collect halite from cells into fleets
-        for fleet in board.fleets.values():
-            cell = fleet.cell
-            delta_halite = int(cell.halite * min(fleet.collection_rate, 99))
-            if delta_halite > 0:
-                fleet._halite += delta_halite
-                cell._halite -= delta_halite
+        // Collect halite from cells into fleets
+        for (Fleet fleet : board.fleets.values() ) {
+            Cell cell = fleet.cell();
+            int deltaHalite = (int)(cell.halite * Math.min(fleet.collectionRate(), 99));
+            if (deltaHalite > 0) {
+                fleet.halite += deltaHalite;
+                cell.halite -= deltaHalite;
+            }
+        }
 
-        # Regenerate halite in cells
-        for cell in board.cells.values():
-            if cell.fleet_id is None and cell.shipyard_id is None:
-                if cell.halite < configuration.max_cell_halite:
-                    next_halite = round(cell.halite * (1 + configuration.regen_rate), 3)
-                    cell._halite = next_halite
+        // Regenerate halite in cells
+        for (Cell cell : board.cells.values()) {
+            if (cell.fleetId.equals("") && cell.shipyardId.equals("")) {
+                if (cell.halite < configuration.max_cell_halite) {
+                    float nextHalite = Math.round(cell.halite * (1 + configuration.regenRate), 3);
+                    cell.halite = nextHalite;
+                }
+            }
+        }
 
-        board._step += 1
+        board.step += 1;
 
-        # self.print()
-
-        return board
-
+        return board;
     }
 
 }

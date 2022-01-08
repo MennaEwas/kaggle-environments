@@ -3,11 +3,11 @@ package halite;
 public class Fleet {
 
     public final String id;
-    public final int shipCount;
-    public final Direction direction;
-    public final Point position;
-    public final String flightPlan;
-    public final float halite;
+    public int shipCount;
+    public Direction direction;
+    public Point position;
+    public String flightPlan;
+    public float halite;
     public final int playerId;
     public final Board board;
     
@@ -42,7 +42,7 @@ public class Fleet {
      * Returns the length of the longest possible flight plan this fleet can be assigned
      * @return
      */
-    public int maxFlightPlanLenForShipCount(int shipCount) {
+    public static int maxFlightPlanLenForShipCount(int shipCount) {
         return (int) (Math.floor(2 * Math.log(shipCount)) + 1);
     }
 
