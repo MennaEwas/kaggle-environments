@@ -64,18 +64,18 @@ public class Direction extends Point {
         throw new IllegalStateException("invalid direction");
     }
 
-    public char toChar() {
+    public String toChar() {
         if (this.equals(Direction.NORTH)) {
-            return 'N';
+            return "N";
         }
         if (this.equals(Direction.EAST)) {
-            return 'E';
+            return "E";
         }
         if (this.equals(Direction.SOUTH)) {
-            return 'S';
+            return "S";
         }
         if (this.equals(Direction.WEST)) {
-            return 'W';
+            return "W";
         }
         throw new IllegalStateException("invalid direction");
     }

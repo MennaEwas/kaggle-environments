@@ -37,6 +37,10 @@ public class Shipyard {
         return new Shipyard(this.id, this.shipCount, this.position, this.playerId, this.turnsControlled, board, this.nextAction);
     }
 
+    public void setNextAction(ShipyardAction action) {
+        this.nextAction = Optional.of(action);
+    }
+
     public int maxSpawn() {
         for (int i = 0; i < this.SPAWN_VALUES.length; i++) {
             if (this.turnsControlled < this.SPAWN_VALUES[i]) {
