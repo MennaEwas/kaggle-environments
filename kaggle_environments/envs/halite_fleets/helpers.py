@@ -445,6 +445,8 @@ class Board:
         print(raw_observation)
         print("wat")
         print(raw_configuration)
+        print("actions")
+        print(next_actions)
         print("DONE")
         observation = Observation(raw_observation)
         # next_actions is effectively a Dict[Union[[FleetId, FleetAction], [ShipyardId, ShipyardAction]]]

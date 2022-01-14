@@ -51,13 +51,9 @@ public class Board {
      */
     public Board(
         String rawObservation,
-        String rawConfiguration,
-        String rawNextActions
+        String rawConfiguration
     ) {
         Observation observation = new Observation(rawObservation);
-        // nextActions is effectively a Dict[[ShipyardId, ShipyardAction]]]
-        // but that type's not very expressible so we simplify it to Dict[str, str]
-        // Later we'll iterate through it once for each fleet and shipyard to pull all the actions out
 
         this.step = observation.step;
         this.remainingOverageTime = observation.remainingOverageTime;
@@ -110,9 +106,6 @@ public class Board {
                 int turnsControlled = shipyardInts[2];
                 Point shipyardPosition = Point.fromIndex(shipyardPosIdx, this.size);
                 Optional<ShipyardAction> action = Optional.empty();
-                if (HaliteJson.containsKey(rawNextActions, shipyardId)) {
-                    action = Optional.of(ShipyardAction.fromString(HaliteJson.getStrFromJson(rawNextActions, shipyardId)));
-                }
                 this.addShipyard(new Shipyard(shipyardId, shipCount, shipyardPosition, playerId, turnsControlled, this, action));
             }
         }
