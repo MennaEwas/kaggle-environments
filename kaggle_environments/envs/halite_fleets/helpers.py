@@ -441,13 +441,6 @@ class Board:
             fleet.player.shipyards[0].cell.north.east.fleet
         Consumers should not set or modify any attributes except and Shipyard.next_action
         """
-        print("NEW")
-        print(raw_observation)
-        print("wat")
-        print(raw_configuration)
-        print("actions")
-        print(next_actions)
-        print("DONE")
         observation = Observation(raw_observation)
         # next_actions is effectively a Dict[Union[[FleetId, FleetAction], [ShipyardId, ShipyardAction]]]
         # but that type's not very expressible so we simplify it to Dict[str, str]

@@ -148,6 +148,18 @@ def attacker_agent(board):
 @board_agent
 def simp_agent(board):
     me = board.current_player
+    if board.step % 100  == 0 and me.id == 0:
+        import json
+        print(board.step)
+        print(me.shipyards)
+        print(me.fleets)
+        obs = board.observation
+        with open("step" + str(board.step), "w") as f:
+            f.writelines(json.dumps(obs))
+        print("DONE")
+        print("======")
+        print("======")
+    me = board.current_player
     remaining_halite = me.halite
     shipyards = me.shipyards
     convert_cost = board.configuration.convert_cost

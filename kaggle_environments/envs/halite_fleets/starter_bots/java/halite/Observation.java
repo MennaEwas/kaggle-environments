@@ -41,10 +41,10 @@ public class Observation {
             String shipyardsStr = playerPart.substring(startShipyards + 1, endShipyards - 1);
 
             HashMap<String, int[]> shipyards = new HashMap<String, int[]>();
-            Arrays.stream(shipyardsStr.split(", ")).forEach(shipyardStr -> {
-                String[] kvparts = shipyardStr.split(": ");
+            Arrays.stream(shipyardsStr.split("], ")).forEach(shipyardStr -> {
+                String[] kvparts = shipyardStr.split(": \\[");
                 String shipyardId = shortenFrontAndBack(kvparts[0], 1);
-                String[] shipyardStrs = shortenFrontAndBack(kvparts[1], 1).split(", ");
+                String[] shipyardStrs = kvparts[1].split(", ");
                 int[] shipyard = new int[shipyardStrs.length];
                 Integer[] shipyardInts = Arrays.stream(shipyardStrs).map(s -> Integer.parseInt(s)).toArray(Integer[]::new);
                 for(int j = 0; j < shipyard.length; j++) {
@@ -55,8 +55,10 @@ public class Observation {
             playerShipyards.add(shipyards);
 
             int startFleets = playerPart.indexOf("}, ");
-            String fleetsStr = playerPart.substring(startFleets + 3, playerPart.length() - 1);
+            String fleetsStr = playerPart.substring(startFleets + 4, playerPart.length() - 1);
 
+            System.out.println("fleetsStr");
+            System.out.println(fleetsStr);
             HashMap<String, String[]> fleets = new HashMap<>();
             Arrays.stream(fleetsStr.split(", ")).forEach(fleetStr -> {
                 String[] kvparts = fleetStr.split(": ");
