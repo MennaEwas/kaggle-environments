@@ -1,6 +1,5 @@
 package test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,13 +19,13 @@ public class ObservationTest {
         
         Observation ob = new Observation(rawObservation);
 
-        Assert.assertEquals(ob.player, 0);
-        Assert.assertEquals(ob.step, 16);
-        Assert.assertEquals(ob.playerHlt.length, 4);
-        Assert.assertEquals(ob.playerFleets.size(), 4);
-        Assert.assertEquals(ob.playerFleets.get(0).size(), 0);
-        Assert.assertEquals(ob.playerShipyards.size(), 4);
-        Assert.assertEquals(ob.playerShipyards.get(0).size(), 1);
+        Assert.assertEquals(0, ob.player);
+        Assert.assertEquals(16, ob.step);
+        Assert.assertEquals(4, ob.playerHlt.length);
+        Assert.assertEquals(4, ob.playerFleets.size());
+        Assert.assertEquals(0, ob.playerFleets.get(0).size());
+        Assert.assertEquals(4, ob.playerShipyards.size());
+        Assert.assertEquals(1, ob.playerShipyards.get(0).size());
     }
 
     @Test
@@ -36,12 +35,12 @@ public class ObservationTest {
         
         Observation ob = new Observation(rawObservation);
 
-        Assert.assertEquals(ob.player, 0);
-        Assert.assertEquals(ob.step, 16);
-        Assert.assertEquals(ob.playerHlt.length, 4);
-        Assert.assertEquals(ob.playerFleets.size(), 4);
-        Assert.assertEquals(ob.playerFleets.get(0).size(), 0);
-        Assert.assertEquals(ob.playerShipyards.size(), 4);
-        Assert.assertEquals(ob.playerShipyards.get(0).size(), 1);
+        Assert.assertEquals(0, ob.player);
+        Assert.assertEquals(200, ob.step);
+        Assert.assertEquals(2, ob.playerHlt.length);
+        Assert.assertEquals(2, ob.playerFleets.size());
+        Assert.assertEquals(1, ob.playerFleets.get(0).size());
+        Assert.assertEquals(2, ob.playerShipyards.size());
+        Assert.assertEquals(6, ob.playerShipyards.get(0).size());
     }
 }

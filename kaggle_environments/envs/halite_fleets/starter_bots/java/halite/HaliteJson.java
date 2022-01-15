@@ -19,7 +19,8 @@ public class HaliteJson {
 
     public static int getPlayerIdxFromJson(String raw) {
         String key = "'player': ";
-        int keyIdx = raw.indexOf(key);
+        String key2 = "\"player\": ";
+        int keyIdx = Math.max(raw.indexOf(key), raw.indexOf(key2));
         String rest = raw.substring(keyIdx + key.length());
         int end = rest.indexOf(",") > 0 ? rest.indexOf(",") : rest.indexOf("}");
         return (int)Integer.parseInt(rest.substring(0, end));

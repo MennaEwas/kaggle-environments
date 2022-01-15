@@ -55,7 +55,7 @@ public class Observation {
             int startFleets = playerPart.indexOf("}, ");
             String fleetsStr = playerPart.substring(startFleets + 4, playerPart.length() - 1);
             HashMap<String, String[]> fleets = new HashMap<>();
-            Arrays.stream(fleetsStr.split(", ")).forEach(fleetStr -> {
+            Arrays.stream(fleetsStr.split("], ")).forEach(fleetStr -> {
                 if (fleetStr.length() == 0) {
                     return;
                 }
