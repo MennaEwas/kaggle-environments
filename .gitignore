@@ -142,3 +142,5 @@ node_modules
 
 # Java class files
 *.class
+
+.vscode

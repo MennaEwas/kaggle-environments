@@ -28,20 +28,18 @@ public class Observation {
         playerShipyards = new ArrayList<HashMap<String, int[]>>();
         playerFleets = new ArrayList<HashMap<String, String[]>>();
 
-        System.out.println("Last one");
-        System.out.println(playerParts[3]);
         for (int i = 0; i < playerParts.length; i ++) {
-            System.out.println("idx " + String.valueOf(i));
-            System.out.println(playerParts[i]);
             String playerPart = playerParts[i];
             playerHlt[i] = Integer.parseInt(playerPart.split(", ")[0]);
 
             int startShipyards = playerPart.indexOf("{");
             int endShipyards = playerPart.indexOf("}");
             String shipyardsStr = playerPart.substring(startShipyards + 1, endShipyards - 1);
-
             HashMap<String, int[]> shipyards = new HashMap<String, int[]>();
             Arrays.stream(shipyardsStr.split("], ")).forEach(shipyardStr -> {
+                if (shipyardStr.length() == 0) {
+                    return;
+                }
                 String[] kvparts = shipyardStr.split(": \\[");
                 String shipyardId = shortenFrontAndBack(kvparts[0], 1);
                 String[] shipyardStrs = kvparts[1].split(", ");
@@ -56,11 +54,11 @@ public class Observation {
 
             int startFleets = playerPart.indexOf("}, ");
             String fleetsStr = playerPart.substring(startFleets + 4, playerPart.length() - 1);
-
-            System.out.println("fleetsStr");
-            System.out.println(fleetsStr);
             HashMap<String, String[]> fleets = new HashMap<>();
             Arrays.stream(fleetsStr.split(", ")).forEach(fleetStr -> {
+                if (fleetStr.length() == 0) {
+                    return;
+                }
                 String[] kvparts = fleetStr.split(": ");
                 String fleetId = shortenFrontAndBack(kvparts[0], 1);
                 String[] fleet = shortenFrontAndBack(kvparts[1], 1).split(", ");
