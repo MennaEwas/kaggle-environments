@@ -693,7 +693,7 @@ class Board:
             for shipyard in player.shipyards:
                 if shipyard.next_action == None:
                     pass
-                elif shipyard.ship_count == 0:
+                elif shipyard.next_action.num_ships == 0:
                     pass
                 elif (shipyard.next_action.action_type == ShipyardActionType.SPAWN 
                         and player.halite >= spawn_cost * shipyard.next_action.num_ships 
