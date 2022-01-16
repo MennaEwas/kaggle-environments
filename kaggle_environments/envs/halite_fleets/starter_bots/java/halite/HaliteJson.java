@@ -12,6 +12,9 @@ public class HaliteJson {
 
     private static String getNumberPartFromJson(String raw, String key) {
         int keyIdx = raw.indexOf(key);
+        if (keyIdx < 0) {
+            throw new IllegalStateException("couldn't find key in raw");
+        }
         String rest = raw.substring(keyIdx + key.length() + 3);
         int end = rest.indexOf(",") > 0 ? rest.indexOf(",") : rest.indexOf("}");
         return rest.substring(0, end);
@@ -21,6 +24,9 @@ public class HaliteJson {
         String key = "'player': ";
         String key2 = "\"player\": ";
         int keyIdx = Math.max(raw.indexOf(key), raw.indexOf(key2));
+        if (keyIdx < 0) {
+            throw new IllegalStateException("couldn't find key in raw");
+        }
         String rest = raw.substring(keyIdx + key.length());
         int end = rest.indexOf(",") > 0 ? rest.indexOf(",") : rest.indexOf("}");
         return (int)Integer.parseInt(rest.substring(0, end));
@@ -28,6 +34,9 @@ public class HaliteJson {
 
     public static String getStrFromJson(String raw, String key) {
         int keyIdx = raw.indexOf(key);
+        if (keyIdx < 0) {
+            throw new IllegalStateException("couldn't find key in raw");
+        }
         String rest = raw.substring(keyIdx + key.length() + 4);
         int end = rest.indexOf(",") > 0 ? rest.indexOf(",") : rest.indexOf("}");
         return rest.substring(0, end - 1);
@@ -40,6 +49,9 @@ public class HaliteJson {
 
     private static String getStrArrStrFromJson(String raw, String key) {
         int keyIdx = raw.indexOf(key);
+        if (keyIdx < 0) {
+            throw new IllegalStateException("couldn't find key in raw");
+        }
         String rest = raw.substring(keyIdx + key.length() + 4);
         int end = rest.indexOf("],") > 0 ? rest.indexOf("],") : rest.indexOf("]}");
         return rest.substring(0, end);
@@ -48,6 +60,9 @@ public class HaliteJson {
     public static String[] getPlayerPartsFromJson(String raw) {
         String key = "players";
         int keyIdx = raw.indexOf(key);
+        if (keyIdx < 0) {
+            throw new IllegalStateException("couldn't find key in raw");
+        }
         String rest = raw.substring(keyIdx + key.length() + 5);
         int end = rest.indexOf("]],") > 0 ? rest.indexOf("]],") : rest.indexOf("]]}");
         return rest.substring(0, end).split("], \\[");

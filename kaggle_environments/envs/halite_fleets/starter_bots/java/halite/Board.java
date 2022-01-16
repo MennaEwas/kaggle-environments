@@ -452,7 +452,7 @@ public class Board {
         // Regenerate halite in cells
         for (Cell cell : board.cells) {
             if (cell.fleetId.equals("") && cell.shipyardId.equals("")) {
-                if (cell.halite < configuration.maxCellHalite) {
+                if (cell.halite < configuration.maxRegenCellHalite) {
                     float nextHalite = (float) (Math.round(cell.halite * (1 + configuration.regenRate) * 1000.0) / 1000.0);
                     cell.halite = nextHalite;
                 }

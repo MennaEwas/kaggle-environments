@@ -29,7 +29,7 @@ public class Player {
      * @return
      */
     public Shipyard[] shipyards() {
-        return (Shipyard[])this.board.shipyards.values().stream().filter(shipyard -> this.shipyardIds.stream().anyMatch(sId -> sId == shipyard.id)).toArray();
+        return this.board.shipyards.values().stream().filter(shipyard -> this.shipyardIds.stream().anyMatch(sId -> sId == shipyard.id)).toArray(Shipyard[]::new);
     }
 
     /**

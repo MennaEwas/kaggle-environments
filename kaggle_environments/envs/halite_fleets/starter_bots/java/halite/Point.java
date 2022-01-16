@@ -40,7 +40,7 @@ public class Point {
     }
 
     public static Point fromIndex(int index, int size) {
-        return new Point(index % size, size - index - 1);
+        return new Point(index % size, size - index/size - 1);
     }
 
     public Point abs() {

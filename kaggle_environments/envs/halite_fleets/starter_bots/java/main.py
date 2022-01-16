@@ -17,10 +17,14 @@ def enqueue_output(out, queue):
     for line in iter(out.readline, b''):
         queue.put(line)
     out.close()
+
 def java_agent(observation, configuration):
     """
     a wrapper around a js agent
     """
+
+    with open("starting.debug", "w") as f:
+        f.writelines(["foo", "bar"])
     global agent_processes, t, q
 
     agent_process = agent_processes[observation.player]
@@ -39,16 +43,18 @@ def java_agent(observation, configuration):
         t = Thread(target=enqueue_output, args=(agent_process.stderr, q))
         t.daemon = True # thread dies with the program
         t.start()
-    if observation.step == 0:
-        # fixes bug where updates array is shared, but the first update is agent dependent actually
-        observation["updates"][0] = f"{observation.player}"
     
     # print observations to agent
-    agent_process.stdin.writelines([observation.encode(), configuration.encode()])
+    import json
+    with open("writing.debug", "w") as f:
+        f.writelines([json.dumps(observation), "\n", json.dumps(configuration)])
+    agent_process.stdin.writelines([json.dumps(observation), "\n", json.dumps(configuration)])
     agent_process.stdin.flush()
 
     # wait for data written to stdout
     agent1res = (agent_process.stdout.readline()).decode()
+    with open("reading.debug", "w") as f:
+        f.writelines(agent1res)
 
     while True:
         try:  line = q.get_nowait()

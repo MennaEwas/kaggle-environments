@@ -8,7 +8,7 @@ public class Configuration {
     public final int spawnCost;
     public final int convertCost;
     public final float regenRate;
-    public final int maxCellHalite;
+    public final int maxRegenCellHalite;
     public final int randomSeed;
 
     public Configuration(String rawConfiguration) {
@@ -18,7 +18,7 @@ public class Configuration {
         this.spawnCost = HaliteJson.getIntFromJson(rawConfiguration, "spawnCost");
         this.convertCost = HaliteJson.getIntFromJson(rawConfiguration, "convertCost");
         this.regenRate = HaliteJson.getFloatFromJson(rawConfiguration, "regenRate");
-        this.maxCellHalite = HaliteJson.getIntFromJson(rawConfiguration, "maxCellHalite");
+        this.maxRegenCellHalite = HaliteJson.getIntFromJson(rawConfiguration, "maxRegenCellHalite");
         this.randomSeed = HaliteJson.getIntFromJson(rawConfiguration, "randomSeed");
     }
 }
