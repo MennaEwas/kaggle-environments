@@ -135,7 +135,7 @@ class ShipyardAction:
         assert number_ships == int(number_ships), "must be an integer number_ships"
         assert flight_plan is not None and len(flight_plan) > 0, "flight_plan must be a str of len > 0"
         assert flight_plan[0].isalpha() and flight_plan[0] in "NESW", "flight_plan must start with a valid direciton NESW"
-        assert all([c in "NESWC0123456789" for c in flight_plan]), "flight_plan can only contain NESWC0-9"
+        assert all([c in "NESWC0123456789" for c in flight_plan]), "flight_plan (" + flight_plan + ")can only contain NESWC0-9"
         return ShipyardAction(ShipyardActionType.LAUNCH, number_ships, flight_plan)
 
     @staticmethod

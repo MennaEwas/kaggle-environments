@@ -23,8 +23,6 @@ def java_agent(observation, configuration):
     a wrapper around a js agent
     """
 
-    with open("starting.debug", "w") as f:
-        f.writelines(["foo", "bar"])
     global agent_processes, t, q
 
     agent_process = agent_processes[observation.player]
@@ -46,15 +44,12 @@ def java_agent(observation, configuration):
     
     # print observations to agent
     import json
-    with open("writing.debug", "w") as f:
-        f.writelines([json.dumps(observation), "\n", json.dumps(configuration)])
-    agent_process.stdin.writelines([json.dumps(observation), "\n", json.dumps(configuration)])
+    agent_process.stdin.write((json.dumps(observation) + "\n").encode())
+    agent_process.stdin.write((json.dumps(configuration) + "\n").encode())
     agent_process.stdin.flush()
 
     # wait for data written to stdout
     agent1res = (agent_process.stdout.readline()).decode()
-    with open("reading.debug", "w") as f:
-        f.writelines(agent1res)
 
     while True:
         try:  line = q.get_nowait()
@@ -65,10 +60,11 @@ def java_agent(observation, configuration):
             # standard error output received, print it out
             print(line.decode(), file=sys.stderr, end='')
 
+    agent1res = agent1res.strip()
     outputs = agent1res.split(",")
     actions = {}
     for cmd in outputs:
         if cmd != "":
-            shipyard_id, action_str = cmd.split(";")
+            shipyard_id, action_str = cmd.split(":")
             actions[shipyard_id] = action_str
     return actions

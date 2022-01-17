@@ -48,6 +48,7 @@ public class Bot {
                 commandBuilder.append(String.format("%s:%s", entry.getKey(), entry.getValue().toString()));
             }
             System.out.println(commandBuilder.toString());
+            System.out.flush();
         }
     }
 }
